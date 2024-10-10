@@ -2,7 +2,7 @@ import jwt
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from django.conf import settings
-
+from rest_framework.permissions import BasePermission
 from text_api.users import SimpleUser
 import logging
 
@@ -38,3 +38,9 @@ class JWTAuthentication(BaseAuthentication):
         user = SimpleUser(payload)
         logger.info(f"Пользователь успешно аутентифицирован: {user.id}")
         return (user, None)
+
+
+class IsOwner(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        # Проверяем, что текущий пользователь является владельцем объекта
+        return obj.user_id == request.user.id
