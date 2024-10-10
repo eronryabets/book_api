@@ -11,21 +11,36 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+from datetime import timedelta
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+env = environ.Env(
+    DEBUG=bool,
+    SECRET_KEY=str,
+
+    DATABASE_NAME_TEXT_API=str,
+    DATABASES_USER_TEXT_API=str,
+    DATABASES_PASSWORD_TEXT_API=str,
+    DATABASE_HOST_TEXT_API=str,
+    DATABASE_PORT_TEXT_API=(int, 5434),
+)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-od3#c6q5d^zvdm5n&j$1u9mnpheqrc9yx+cyw)%**(yrl4r)w3'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
+# DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']  # (!) в продакшене указать конкретные домены
+# ALLOWED_HOSTS = ['custom_auth.localhost', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -37,6 +52,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'rest_framework',
+    'corsheaders',
+    'debug_toolbar',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+
+    'text_service'
+
 ]
 
 MIDDLEWARE = [
@@ -47,6 +71,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'corsheaders.middleware.CorsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'text_api.middleware.JWTAuthenticationFromCookiesMiddleware',
+
 ]
 
 ROOT_URLCONF = 'text_api.urls'
@@ -70,17 +99,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'text_api.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": env('DATABASE_NAME_TEXT_API'),
+        "USER": env('DATABASES_USER_TEXT_API'),
+        "PASSWORD": env('DATABASES_PASSWORD_TEXT_API'),
+        "HOST": env('DATABASE_HOST_TEXT_API'),
+        "PORT": env('DATABASE_PORT_TEXT_API'),
+    },
 }
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -100,7 +137,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -112,13 +148,45 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+# Путь к папке для хранения медиафайлов
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Кастомная модель нашего юзера
+# AUTH_USER_MODEL = 'text_service.CustomUser'
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+    'localhost',
+]
+
+# CORS settings
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True  # Разрешить все источники
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://auth.drunar.space",
+    "http://user.drunar.space",
+    "http://text.drunar.space",
+    "http://localhost:3000",  # URL фронтенда
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://auth.drunar.space",
+    "http://user.drunar.space",
+    "http://text.drunar.space",
+    "http://localhost:3000",  # URL фронтенда
+]
