@@ -1,12 +1,14 @@
-
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 
 from text_service.models import Book, Genre, BookGenre, Tag
 from text_service.serializers import BookSerializer, GenreSerializer, BookGenreSerializer, TagSerializer
 
+
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+    permission_classes = [IsAuthenticated]  # Добавлено
 
 
 class GenreViewSet(viewsets.ModelViewSet):
