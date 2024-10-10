@@ -1,0 +1,14 @@
+.idea/
+venv/
+static/
+media/
+secret/
+logs/
+*.env
+*.secret
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.log
+*.out
