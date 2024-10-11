@@ -1,6 +1,11 @@
 from django.db import models
 
 
+def book_cover_upload_path(instance, filename):
+    # Define the path for the cover image: /user_id/book_id/cover/
+    return f'{instance.user_id}/{instance.id}/cover/{filename}'
+
+
 class Book(models.Model):
     user_id = models.UUIDField(editable=False)
     id = models.UUIDField(primary_key=True, editable=False)
@@ -9,6 +14,8 @@ class Book(models.Model):
     file_path = models.CharField(max_length=500, help_text='Path should be in the format: /<UUID user>/<UUID book>')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    cover_image = models.ImageField(max_length=500, upload_to=book_cover_upload_path, null=True, blank=True,
+                                    help_text='Upload a cover image for the book')
 
     def __str__(self):
         return self.title

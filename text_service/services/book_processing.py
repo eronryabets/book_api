@@ -1,4 +1,3 @@
-
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
@@ -16,6 +15,7 @@ def process_uploaded_book(request):
     title = request.data.get('title')
     genre = request.data.get('genre')
     pdf_file = request.FILES.get('file')
+    cover_image = request.FILES.get('cover_image')  # Добавляем обложку
 
     if not pdf_file:
         return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
@@ -30,13 +30,19 @@ def process_uploaded_book(request):
     original_file_path = os.path.join(book_path, pdf_file.name)
     full_original_path = default_storage.save(original_file_path, pdf_file)
 
+    # Save the cover image if provided
+    cover_image_path = None
+    if cover_image:
+        cover_image_path = default_storage.save(os.path.join(book_path, cover_image.name), cover_image)
+
     # Create a book instance in the database
     book = Book.objects.create(
         id=book_id,
         user_id=user_id,
         title=title,
         genre=genre,
-        file_path=f"/media/{book_path}"
+        file_path=f"/media/{book_path}",
+        cover_image=cover_image_path
     )
 
     # Read and split PDF into chapters (based on 10 pages or detected chapter titles)

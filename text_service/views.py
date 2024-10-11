@@ -1,3 +1,5 @@
+from django.core.files.storage import default_storage
+
 from text_api import settings
 
 from text_service.models import Book, Genre, BookGenre, Tag
@@ -34,6 +36,13 @@ class BookViewSet(viewsets.ModelViewSet):
                 shutil.rmtree(book_directory)
             except Exception as e:
                 print(f"Error deleting book directory: {e}")
+
+        # Delete the book cover image if it exists
+        if instance.cover_image and default_storage.exists(instance.cover_image.path):
+            try:
+                default_storage.delete(instance.cover_image.path)
+            except Exception as e:
+                print(f"Error deleting book cover image: {e}")
 
         # Call the superclass method to delete the instance from the database
         super().perform_destroy(instance)
