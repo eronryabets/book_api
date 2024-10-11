@@ -14,6 +14,18 @@ class Book(models.Model):
         return self.title
 
 
+class BookChapter(models.Model):
+    id = models.UUIDField(primary_key=True, editable=False)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='chapters')
+    file_path = models.CharField(max_length=500)
+    start_page_number = models.IntegerField()
+    end_page_number = models.IntegerField()
+    chapter_title = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.book.title} - {self.chapter_title or 'Chapter starting at page ' + str(self.start_page_number)}"
+
+
 class Genre(models.Model):
     name = models.CharField(max_length=100, unique=True)
 

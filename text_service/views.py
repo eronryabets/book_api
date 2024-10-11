@@ -2,8 +2,9 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from text_api.authentication import IsOwner
-from text_service.models import Book, Genre, BookGenre, Tag
-from text_service.serializers import BookSerializer, GenreSerializer, BookGenreSerializer, TagSerializer
+from text_service.models import Book, Genre, BookGenre, Tag, BookChapter
+from text_service.serializers import BookSerializer, GenreSerializer, BookGenreSerializer, TagSerializer, \
+    BookChapterSerializer
 
 
 class BookViewSet(viewsets.ModelViewSet):
@@ -18,6 +19,11 @@ class BookViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Автоматически устанавливаем текущего пользователя в качестве владельца книги при создании
         serializer.save(user_id=self.request.user.id)
+
+
+class BookChapterViewSet(viewsets.ModelViewSet):
+    queryset = BookChapter.objects.all()
+    serializer_class = BookChapterSerializer
 
 
 class GenreViewSet(viewsets.ModelViewSet):
