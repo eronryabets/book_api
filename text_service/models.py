@@ -6,24 +6,12 @@ class Book(models.Model):
     id = models.UUIDField(primary_key=True, editable=False)
     title = models.CharField(max_length=255)
     genre = models.CharField(max_length=100)
-    file_path = models.CharField(max_length=500)
+    file_path = models.CharField(max_length=500, help_text='Path should be in the format: /<UUID user>/<UUID book>')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.title
-
-
-class BookChapter(models.Model):
-    id = models.UUIDField(primary_key=True, editable=False)
-    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='chapters')
-    file_path = models.CharField(max_length=500)
-    start_page_number = models.IntegerField()
-    end_page_number = models.IntegerField()
-    chapter_title = models.CharField(max_length=255, null=True, blank=True)
-
-    def __str__(self):
-        return f"{self.book.title} - {self.chapter_title or 'Chapter starting at page ' + str(self.start_page_number)}"
 
 
 class Genre(models.Model):
@@ -50,3 +38,15 @@ class Tag(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.book.title})"
+
+
+class BookChapter(models.Model):
+    id = models.UUIDField(primary_key=True, editable=False)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='chapters')
+    file_path = models.CharField(max_length=500, help_text='Full path format: /<UUID user>/<UUID book>/<file name>')
+    start_page_number = models.IntegerField()
+    end_page_number = models.IntegerField()
+    chapter_title = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.book.title} - {self.chapter_title or 'Chapter starting at page ' + str(self.start_page_number)}"

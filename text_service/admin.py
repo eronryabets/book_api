@@ -9,12 +9,6 @@ class BookAdmin(admin.ModelAdmin):
     search_fields = ('title', 'genre')
 
 
-@admin.register(BookChapter)
-class BookChapterAdmin(admin.ModelAdmin):
-    list_display = ('book', 'chapter_title', 'start_page_number', 'end_page_number')
-    search_fields = ('book__title', 'chapter_title')
-
-
 @admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
     list_display = ('name',)
@@ -31,3 +25,8 @@ class BookGenreAdmin(admin.ModelAdmin):
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'book')
     search_fields = ('name', 'book__title')
+
+@admin.register(BookChapter)
+class BookChapterAdmin(admin.ModelAdmin):
+    list_display = ('book', 'chapter_title', 'start_page_number', 'end_page_number')
+    search_fields = ('book__title', 'chapter_title')
