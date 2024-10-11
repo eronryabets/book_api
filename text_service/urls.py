@@ -10,6 +10,7 @@ router.register(r'bookgenres', BookGenreViewSet, basename='bookgenres')
 router.register(r'tags', TagViewSet, basename='tags')
 router.register(r'chapters', BookChapterViewSet, basename='chapters')
 
+
 # URLs
 urlpatterns = [
     path('', include(router.urls)),

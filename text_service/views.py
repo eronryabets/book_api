@@ -1,14 +1,17 @@
-
 from text_api import settings
-from rest_framework import viewsets
-from rest_framework.decorators import action
-from text_service.models import Book, Genre, BookGenre, Tag, BookChapter
-from text_service.serializers import BookSerializer, GenreSerializer, BookGenreSerializer, TagSerializer, \
-    BookChapterSerializer
+
+from text_service.models import Book, Genre, BookGenre, Tag
+from text_service.serializers import BookSerializer, GenreSerializer, BookGenreSerializer, TagSerializer
 from text_service.services.book_processing import process_uploaded_book
 from django.conf import settings
 import shutil
 import os
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from rest_framework import viewsets, status
+from text_service.models import BookChapter
+from text_service.serializers import BookChapterSerializer
+from text_service.services.chapter_processing import processing_get_chapter
 
 
 class BookViewSet(viewsets.ModelViewSet):
@@ -55,3 +58,9 @@ class TagViewSet(viewsets.ModelViewSet):
 class BookChapterViewSet(viewsets.ModelViewSet):
     queryset = BookChapter.objects.all()
     serializer_class = BookChapterSerializer
+
+    # Custom action to get chapter text by chapter id
+    @action(detail=False, methods=['get'], url_path='get_chapter')
+    def get_chapter(self, request):
+        response = processing_get_chapter(request)
+        return response
