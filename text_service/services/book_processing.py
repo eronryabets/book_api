@@ -1,3 +1,4 @@
+
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
@@ -68,6 +69,13 @@ def process_uploaded_book(request):
     if chapter_start_page < total_pages:
         save_chapter(book, book_path, pdf_reader, chapter_number, chapter_start_page, total_pages - 1, chapter_title)
 
+    # Delete the original PDF file after processing
+    try:
+        default_storage.delete(full_original_path)
+    except Exception as e:
+        return Response({'error': f'Failed to delete original PDF file: {str(e)}'},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     return Response({'message': 'Book uploaded and processed successfully', 'chapter_titles': chapter_titles_detected},
                     status=status.HTTP_201_CREATED)
 
@@ -83,6 +91,15 @@ def detect_chapter_title(page_text):
     # Simple heuristic: look for lines that are in uppercase and not too long
     lines = page_text.split('\n')
     for line in lines:
+        # Ignore lines that are too short (e.g., a single letter like "I")
+        if len(line) < 3:
+            continue
+
+        # Ignore lines that are too long (e.g., entire paragraph in uppercase)
+        if len(line.split()) > 8:
+            continue
+
+        # Consider it a chapter title if it is uppercase and not too long
         if len(line) < 50 and line.isupper():
             return line.strip()
 
