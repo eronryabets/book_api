@@ -1,89 +1,103 @@
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
+from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import status
 from PyPDF2 import PdfReader
 import os
 import uuid
 
-from text_service.models import BookChapter, Book
+from text_service.models import BookChapter, Book, Genre, BookGenre
 
 
 def process_uploaded_book(request):
-    user_id = request.data.get('user_id')
-    title = request.data.get('title')
-    genre = request.data.get('genre')
-    pdf_file = request.FILES.get('file')
-    cover_image = request.FILES.get('cover_image')  # Добавляем обложку
+    # Используем транзакцию для обеспечения атомарности операций
+    with transaction.atomic():
+        user_id = request.data.get('user_id')
+        title = request.data.get('title')
+        genre_ids = request.data.getlist('genres')  # Используем getlist для получения всех жанров
+        pdf_file = request.FILES.get('file')
+        cover_image = request.FILES.get('cover_image')  # Добавляем обложку
 
-    if not pdf_file:
-        return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
+        if not pdf_file:
+            return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Generate UUID for book and create book instance
-    book_id = uuid.uuid4()
-    book_path = os.path.join(str(user_id), str(book_id))
-    os.makedirs(os.path.join(settings.MEDIA_ROOT, book_path),
-                exist_ok=True)  # Создаем директорию, если она не существует
+        if not genre_ids:
+            return Response({'error': 'No genres provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Save the original PDF file in the designated directory
-    original_file_path = os.path.join(book_path, pdf_file.name)
-    full_original_path = default_storage.save(original_file_path, pdf_file)
+        # Проверка, что все переданные жанры существуют
+        genres = Genre.objects.filter(id__in=genre_ids)
+        if genres.count() != len(genre_ids):
+            return Response({'error': 'One or more genres are invalid'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Save the cover image if provided
-    cover_image_path = None
-    if cover_image:
-        cover_image_path = default_storage.save(os.path.join(book_path, cover_image.name), cover_image)
+        # Генерация UUID для книги и создание директории
+        book_id = uuid.uuid4()
+        book_path = os.path.join(str(user_id), str(book_id))
+        os.makedirs(os.path.join(settings.MEDIA_ROOT, book_path), exist_ok=True)
 
-    # Create a book instance in the database
-    book = Book.objects.create(
-        id=book_id,
-        user_id=user_id,
-        title=title,
-        genre=genre,
-        file_path=f"/media/{book_path}",
-        cover_image=cover_image_path
-    )
+        # Сохранение исходного PDF файла в указанной директории
+        original_file_path = os.path.join(book_path, pdf_file.name)
+        full_original_path = default_storage.save(original_file_path, pdf_file)
 
-    # Read and split PDF into chapters (based on 10 pages or detected chapter titles)
-    pdf_reader = PdfReader(default_storage.open(full_original_path, 'rb'))
-    total_pages = len(pdf_reader.pages)
-    chapter_number = 1
-    chapter_start_page = 0
-    chapter_title = None
-    chapter_titles_detected = []
+        # Сохранение обложки, если предоставлена
+        cover_image_path = None
+        if cover_image:
+            cover_image_path = default_storage.save(os.path.join(book_path, cover_image.name), cover_image)
 
-    for i in range(total_pages):
-        page = pdf_reader.pages[i]
-        page_text = page.extract_text()
+        # Создание экземпляра книги в базе данных
+        book = Book.objects.create(
+            id=book_id,
+            user_id=user_id,
+            title=title,
+            file_path=f"/media/{book_path}",
+            cover_image=cover_image_path
+        )
 
-        # Detect chapter titles based on heuristics (e.g., certain formatting or keywords)
-        potential_title = detect_chapter_title(page_text)
+        # Связывание жанров с книгой
+        BookGenre.objects.bulk_create([
+            BookGenre(book=book, genre=genre) for genre in genres
+        ])
 
-        if potential_title:
-            # If we detected a new chapter title, save the previous chapter
-            if chapter_start_page != i:
-                save_chapter(book, book_path, pdf_reader, chapter_number, chapter_start_page, i - 1, chapter_title)
-                chapter_number += 1
+        # Чтение и разбиение PDF на главы
+        pdf_reader = PdfReader(default_storage.open(full_original_path, 'rb'))
+        total_pages = len(pdf_reader.pages)
+        chapter_number = 1
+        chapter_start_page = 0
+        chapter_title = None
+        chapter_titles_detected = []
 
-            # Start a new chapter
-            chapter_start_page = i
-            chapter_title = potential_title
-            chapter_titles_detected.append(potential_title)
+        for i in range(total_pages):
+            page = pdf_reader.pages[i]
+            page_text = page.extract_text()
 
-    # Save the last chapter (if any)
-    if chapter_start_page < total_pages:
-        save_chapter(book, book_path, pdf_reader, chapter_number, chapter_start_page, total_pages - 1, chapter_title)
+            # Обнаружение заголовка главы на основе эвристик
+            potential_title = detect_chapter_title(page_text)
 
-    # Delete the original PDF file after processing
-    try:
-        default_storage.delete(full_original_path)
-    except Exception as e:
-        return Response({'error': f'Failed to delete original PDF file: {str(e)}'},
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            if potential_title:
+                # Если обнаружен новый заголовок главы, сохранить предыдущую главу
+                if chapter_start_page != i:
+                    save_chapter(book, book_path, pdf_reader, chapter_number, chapter_start_page, i - 1, chapter_title)
+                    chapter_number += 1
 
-    return Response({'message': 'Book uploaded and processed successfully', 'chapter_titles': chapter_titles_detected},
-                    status=status.HTTP_201_CREATED)
+                # Начало новой главы
+                chapter_start_page = i
+                chapter_title = potential_title
+                chapter_titles_detected.append(potential_title)
+
+        # Сохранение последней главы
+        if chapter_start_page < total_pages:
+            save_chapter(book, book_path, pdf_reader, chapter_number, chapter_start_page, total_pages - 1, chapter_title)
+
+        # Удаление исходного PDF файла после обработки
+        try:
+            default_storage.delete(full_original_path)
+        except Exception as e:
+            return Response({'error': f'Failed to delete original PDF file: {str(e)}'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({'message': 'Book uploaded and processed successfully', 'chapter_titles': chapter_titles_detected},
+                        status=status.HTTP_201_CREATED)
 
 
 def detect_chapter_title(page_text):
