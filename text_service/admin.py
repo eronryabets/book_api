@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from text_service.models import Book, Genre, BookGenre, Tag, BookChapter
+from text_service.models import Book, Genre, BookGenre, BookChapter
 
 
 @admin.register(Book)
@@ -20,11 +20,6 @@ class BookGenreAdmin(admin.ModelAdmin):
     list_display = ('book', 'genre')
     search_fields = ('book__title', 'genre__name')
 
-
-@admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'book')
-    search_fields = ('name', 'book__title')
 
 @admin.register(BookChapter)
 class BookChapterAdmin(admin.ModelAdmin):

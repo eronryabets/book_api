@@ -1,10 +1,9 @@
 from rest_framework import serializers
 
-from text_service.models import Book, Genre, BookGenre, Tag, BookChapter
+from text_service.models import Book, Genre, BookGenre, BookChapter
 
 
 class BookSerializer(serializers.ModelSerializer):
-    tags = serializers.StringRelatedField(many=True, read_only=True)
     chapters = serializers.StringRelatedField(many=True, read_only=True)  # Added chapters field to BookSerializer
 
     class Meta:
@@ -24,13 +23,6 @@ class BookGenreSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class TagSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tag
-        fields = '__all__'
-
-
-# Added new serializer for BookChapter
 class BookChapterSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookChapter

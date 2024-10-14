@@ -39,14 +39,6 @@ class BookGenre(models.Model):
         return f"{self.book.title} - {self.genre.name}"
 
 
-class Tag(models.Model):
-    name = models.CharField(max_length=100)
-    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='tags')
-
-    def __str__(self):
-        return f"{self.name} ({self.book.title})"
-
-
 class BookChapter(models.Model):
     id = models.UUIDField(primary_key=True, editable=False)
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='chapters')

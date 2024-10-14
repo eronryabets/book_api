@@ -2,13 +2,12 @@ from django.core.files.storage import default_storage
 
 from text_api import settings
 
-from text_service.models import Book, Genre, BookGenre, Tag
-from text_service.serializers import BookSerializer, GenreSerializer, BookGenreSerializer, TagSerializer
+from text_service.models import Book, Genre, BookGenre
+from text_service.serializers import BookSerializer, GenreSerializer, BookGenreSerializer
 from text_service.services.book_processing import process_uploaded_book
 from django.conf import settings
 import shutil
 import os
-from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from text_service.models import BookChapter
@@ -48,22 +47,6 @@ class BookViewSet(viewsets.ModelViewSet):
         super().perform_destroy(instance)
 
 
-class GenreViewSet(viewsets.ModelViewSet):
-    queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
-
-
-class BookGenreViewSet(viewsets.ModelViewSet):
-    queryset = BookGenre.objects.all()
-    serializer_class = BookGenreSerializer
-
-
-class TagViewSet(viewsets.ModelViewSet):
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
-
-
-# Added new ViewSet for BookChapter
 class BookChapterViewSet(viewsets.ModelViewSet):
     queryset = BookChapter.objects.all()
     serializer_class = BookChapterSerializer
