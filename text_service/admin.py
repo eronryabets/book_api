@@ -13,3 +13,10 @@ class BookAdmin(admin.ModelAdmin):
 class BookChapterAdmin(admin.ModelAdmin):
     list_display = ('book', 'chapter_title', 'start_page_number', 'end_page_number')
     search_fields = ('book__title', 'chapter_title')
+
+
+@admin.register(Genre)
+class GenreAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+
