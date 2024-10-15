@@ -191,18 +191,38 @@ CORS_ALLOW_ALL_ORIGINS = True  # Разрешить все источники
 CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
 
+CORS_ALLOW_HEADERS = [
+    'Authorization',
+    'Content-Type',
+    'X-CSRFToken',
+    'Access-Control-Allow-Origin',
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.drunar\.space$",
+]
+
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PATCH',
+    'PUT',
+    'DELETE',
+    'OPTIONS',
+]
+
 CORS_ALLOWED_ORIGINS = [
     "http://auth.drunar.space",
     "http://user.drunar.space",
     "http://text.drunar.space",
-    "http://localhost:3000",  # URL фронтенда
+    "http://drunar.space:3000/",  # URL фронтенда
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "http://auth.drunar.space",
     "http://user.drunar.space",
     "http://text.drunar.space",
-    "http://localhost:3000",  # URL фронтенда
+    "http://drunar.space:3000/",  # URL фронтенда
 ]
 
 LOGGING = {
