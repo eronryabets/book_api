@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from text_service.models import Book, Genre, BookGenre, BookChapter
+from book_service.models import Book, Genre, BookGenre, BookChapter
 
 
 @admin.register(Book)

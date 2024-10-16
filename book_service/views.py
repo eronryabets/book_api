@@ -1,18 +1,18 @@
 from django.core.files.storage import default_storage
 
-from text_api import settings
+from book_api import settings
 
-from text_service.models import Book, Genre
-from text_service.serializers import BookSerializer, GenreSerializer
-from text_service.services.book_processing import process_uploaded_book
+from book_service.models import Book, Genre
+from book_service.serializers import BookSerializer, GenreSerializer
+from book_service.services.book_processing import process_uploaded_book
 from django.conf import settings
 import shutil
 import os
 from rest_framework.decorators import action
 from rest_framework import viewsets
-from text_service.models import BookChapter
-from text_service.serializers import BookChapterSerializer
-from text_service.services.chapter_processing import processing_get_chapter
+from book_service.models import BookChapter
+from book_service.serializers import BookChapterSerializer
+from book_service.services.chapter_processing import processing_get_chapter
 
 
 class BookViewSet(viewsets.ModelViewSet):

@@ -1,5 +1,5 @@
 """
-URL configuration for text_api project.
+URL configuration for book_api project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.1/topics/http/urls/
@@ -20,5 +20,5 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('text_service.urls')),  # for example : text.drunar.space/books/
+    path('', include('book_service.urls')),  # for example : text.drunar.space/books/
 ]

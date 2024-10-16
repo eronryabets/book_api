@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from text_service.models import Book, Genre, BookGenre, BookChapter
+from book_service.models import Book, Genre, BookGenre, BookChapter
 
 
 class GenreSerializer(serializers.ModelSerializer):

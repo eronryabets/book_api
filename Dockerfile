@@ -19,4 +19,4 @@ EXPOSE 8000
 # RUN python manage.py test
 
 # Команда для запуска Gunicorn
-CMD ["gunicorn", "--workers", "3", "--bind", "0.0.0.0:8000", "text_api.wsgi:application"]
+CMD ["gunicorn", "--workers", "3", "--bind", "0.0.0.0:8000", "book_api.wsgi:application"]

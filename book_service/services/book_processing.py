@@ -8,7 +8,7 @@ from PyPDF2 import PdfReader
 import os
 import uuid
 
-from text_service.models import BookChapter, Book, Genre, BookGenre
+from book_service.models import BookChapter, Book, Genre, BookGenre
 
 
 def process_uploaded_book(request):
