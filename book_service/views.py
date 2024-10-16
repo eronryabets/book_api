@@ -3,6 +3,7 @@ from django.core.files.storage import default_storage
 from book_api import settings
 
 from book_service.models import Book, Genre
+from book_service.pagination import BookPagination
 from book_service.serializers import BookSerializer, GenreSerializer
 from book_service.services.book_processing import process_uploaded_book
 from django.conf import settings
@@ -18,6 +19,7 @@ from book_service.services.chapter_processing import processing_get_chapter
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all().prefetch_related('bookgenre_set__genre', 'chapters')
     serializer_class = BookSerializer
+    pagination_class = BookPagination
 
     # Custom action for uploading and processing PDF files
     @action(detail=False, methods=['post'], url_path='upload')
