@@ -14,7 +14,7 @@ class BookSerializer(serializers.ModelSerializer):
         many=True,
         write_only=True
     )
-    genre_details = GenreSerializer(source='bookgenre_set__genre', many=True, read_only=True)
+    genre_details = serializers.SerializerMethodField()
     chapters = serializers.StringRelatedField(many=True, read_only=True)
 
     class Meta:
@@ -31,6 +31,11 @@ class BookSerializer(serializers.ModelSerializer):
             'genre_details',  # Для отображения связанных жанров при чтении
             'chapters'
         ]
+
+    def get_genre_details(self, obj):
+        # Получаем все связанные BookGenre и извлекаем Genre
+        genres = obj.bookgenre_set.all().select_related('genre')
+        return GenreSerializer([bg.genre for bg in genres], many=True).data
 
     def create(self, validated_data):
         genres = validated_data.pop('genres', [])
