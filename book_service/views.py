@@ -18,7 +18,7 @@ from book_service.services.chapter_processing import processing_get_chapter
 
 
 class BookViewSet(viewsets.ModelViewSet):
-    queryset = Book.objects.all().prefetch_related(
+    queryset = Book.objects.all().order_by('-created_at').prefetch_related(
         'bookgenre_set__genre',  # Предзагрузка жанров через BookGenre
         'chapters'               # Предзагрузка глав книги
     )
