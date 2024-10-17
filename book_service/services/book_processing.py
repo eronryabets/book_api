@@ -15,6 +15,7 @@ def process_uploaded_book(request):
     # Используем транзакцию для обеспечения атомарности операций
     with transaction.atomic():
         user_id = request.data.get('user_id')
+        description = request.data.get('description')
         title = request.data.get('title')
         genre_ids = request.data.getlist('genres')  # Используем getlist для получения всех жанров
         pdf_file = request.FILES.get('file')
@@ -50,6 +51,7 @@ def process_uploaded_book(request):
             id=book_id,
             user_id=user_id,
             title=title,
+            description=description,
             file_path=f"/media/{book_path}",
             cover_image=cover_image_path
         )

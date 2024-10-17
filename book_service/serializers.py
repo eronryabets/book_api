@@ -23,6 +23,7 @@ class BookSerializer(serializers.ModelSerializer):
             'id',
             'user_id',
             'title',
+            'description',
             'file_path',
             'created_at',
             'updated_at',
