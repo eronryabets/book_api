@@ -1,4 +1,10 @@
+import os
+
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from rest_framework import serializers
+
+
 from book_service.models import Book, Genre, BookGenre, BookChapter
 
 
@@ -23,7 +29,7 @@ class BookSerializer(serializers.ModelSerializer):
             'id',
             'user_id',
             'title',
-            'description',
+            'description',  # Описание книги
             'file_path',
             'created_at',
             'updated_at',
@@ -48,17 +54,38 @@ class BookSerializer(serializers.ModelSerializer):
         return book
 
     def update(self, instance, validated_data):
+        # Получаем обложку из данных
+        new_cover_image = validated_data.pop('cover_image', None)
+
+        # Если обложка уже существовала, удаляем старую
+        if new_cover_image and instance.cover_image and default_storage.exists(instance.cover_image.name):
+            default_storage.delete(instance.cover_image.name)
+
+        # Обновляем остальные поля книги
         genres = validated_data.pop('genres', None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
+        # Если новая обложка предоставлена, сохраняем её в той же папке, что и книга
+        if new_cover_image:
+            # Используем относительный путь для сохранения файла обложки
+            book_path = os.path.join(os.path.dirname(instance.file_path.replace('/media/', '')), str(instance.id))
+            cover_image_filename = new_cover_image.name
+            cover_image_path = os.path.join(book_path, cover_image_filename)
+
+            # Сохраняем файл с использованием `default_storage`
+            full_cover_image_path = default_storage.save(cover_image_path, ContentFile(new_cover_image.read()))
+            instance.cover_image = full_cover_image_path
+            instance.save()
+
+        # Обновление жанров: удаление старых и добавление новых
         if genres is not None:
-            # Обновление жанров: удаление старых и добавление новых
             instance.bookgenre_set.all().delete()
             BookGenre.objects.bulk_create([
                 BookGenre(book=instance, genre=genre) for genre in genres
             ])
+
         return instance
 
 
