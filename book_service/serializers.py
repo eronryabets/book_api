@@ -14,6 +14,12 @@ class GenreSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 
+class BookChapterSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookChapter
+        fields = ['id', 'chapter_title']  # Включаем id и title
+
+
 class BookSerializer(serializers.ModelSerializer):
     genres = serializers.PrimaryKeyRelatedField(
         queryset=Genre.objects.all(),
@@ -21,7 +27,7 @@ class BookSerializer(serializers.ModelSerializer):
         write_only=True
     )
     genre_details = serializers.SerializerMethodField()
-    chapters = serializers.StringRelatedField(many=True, read_only=True)
+    chapters = BookChapterSummarySerializer(many=True, read_only=True)
 
     class Meta:
         model = Book
