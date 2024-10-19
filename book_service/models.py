@@ -43,8 +43,8 @@ class BookChapter(models.Model):
     id = models.UUIDField(primary_key=True, editable=False)
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='chapters')
     file_path = models.CharField(max_length=500, help_text='Full path format: /<UUID user>/<UUID book>/<file name>')
-    start_page_number = models.IntegerField()
-    end_page_number = models.IntegerField()
+    start_page_number = models.IntegerField(null=True, blank=True)
+    end_page_number = models.IntegerField(null=True, blank=True)
     chapter_title = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
