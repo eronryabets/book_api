@@ -15,7 +15,7 @@ from rest_framework import viewsets
 from book_service.models import BookChapter
 from book_service.serializers import BookChapterSerializer
 from book_service.services.chapter_processing import processing_get_chapter
-
+from book_service.services.book_processing import process_uploaded_book
 
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all().order_by('-created_at').prefetch_related(

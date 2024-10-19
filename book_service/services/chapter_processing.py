@@ -1,5 +1,5 @@
-from book_api import settings
 
+from book_api import settings
 from django.conf import settings
 import os
 from rest_framework.response import Response
