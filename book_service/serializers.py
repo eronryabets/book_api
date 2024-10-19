@@ -17,7 +17,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class BookChapterSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = BookChapter
-        fields = ['id', 'chapter_title']  # Включаем id и title
+        fields = ['id', 'chapter_title']  # Включаем только id и title
 
 
 class BookSerializer(serializers.ModelSerializer):
