@@ -6,7 +6,6 @@ from book_service.filters import BookFilter
 from book_service.models import Book, Genre
 from book_service.pagination import BookPagination
 from book_service.serializers import BookSerializer, GenreSerializer
-from book_service.services.book_processing import process_uploaded_book
 from django.conf import settings
 import shutil
 import os
@@ -17,10 +16,11 @@ from book_service.serializers import BookChapterSerializer
 from book_service.services.chapter_processing import processing_get_chapter
 from book_service.services.book_processing import process_uploaded_book
 
+
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all().order_by('-created_at').prefetch_related(
         'bookgenre_set__genre',  # Предзагрузка жанров через BookGenre
-        'chapters'               # Предзагрузка глав книги
+        'chapters'  # Предзагрузка глав книги
     )
     serializer_class = BookSerializer
     pagination_class = BookPagination

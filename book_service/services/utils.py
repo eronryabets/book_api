@@ -1,11 +1,9 @@
-
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import os
 import uuid
 from book_service.models import BookChapter, Book, Genre, BookGenre
 import re
-
 
 
 def clean_text(text):
