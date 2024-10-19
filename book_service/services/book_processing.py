@@ -14,6 +14,7 @@ from lxml import etree
 from ebooklib import epub
 from bs4 import BeautifulSoup
 from striprtf.striprtf import rtf_to_text
+import re
 
 
 def process_uploaded_book(request):
@@ -93,8 +94,19 @@ def process_uploaded_book(request):
             return Response({'error': f'Failed to delete original file: {str(e)}'},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        return Response({'message': 'Book uploaded and processed successfully', 'chapter_titles': result['chapter_titles']},
-                        status=status.HTTP_201_CREATED)
+        return Response(
+            {'message': 'Book uploaded and processed successfully', 'chapter_titles': result['chapter_titles']},
+            status=status.HTTP_201_CREATED)
+
+
+def clean_text(text):
+    """
+    Удаляет лишние пустые строки из текста.
+    Заменяет три и более подряд идущих переводов строк на два.
+    """
+    # Заменяем три и более переводов строк на 1
+    cleaned_text = re.sub(r'\n{3,}', '\n', text)
+    return cleaned_text.strip()
 
 
 def detect_chapter_title(line):
@@ -128,7 +140,7 @@ def detect_chapter_title(line):
 
 def split_text_into_chapters(text):
     """
-    Разбивает заданный текст на главы на основе функции detect_chapter_title.
+    Разбивает текст на главы на основе функции detect_chapter_title.
     Возвращает список кортежей: (chapter_title, chapter_text)
     """
     lines = text.split('\n')
@@ -142,24 +154,30 @@ def split_text_into_chapters(text):
         if potential_title:
             # Начинаем новую главу
             if current_chapter_lines:
-                # Сохраняем предыдущую главу
+                # Объединяем линии текущей главы
                 chapter_text = '\n'.join(current_chapter_lines)
-                chapters.append((current_chapter_title or f"Untitled Chapter {len(chapters) + 1}", chapter_text))
-                chapter_titles_detected.append(current_chapter_title or f"Untitled Chapter {len(chapters)}")
-            # Начинаем новую главу
+                # Очищаем текст от лишних пустых строк
+                chapter_text = clean_text(chapter_text)
+                chapters.append((current_chapter_title or f"Untitled Chapter {len(chapters)+1}", chapter_text))
+                chapter_titles_detected.append(current_chapter_title or f"Untitled Chapter {len(chapters)+1}")
+            # Инициализируем новую главу
             current_chapter_title = potential_title
             current_chapter_lines = []
         else:
             current_chapter_lines.append(line)
+
     # Сохраняем последнюю главу
     if current_chapter_lines:
         chapter_text = '\n'.join(current_chapter_lines)
-        chapters.append((current_chapter_title or f"Untitled Chapter {len(chapters) + 1}", chapter_text))
-        chapter_titles_detected.append(current_chapter_title or f"Untitled Chapter {len(chapters)}")
+        chapter_text = clean_text(chapter_text)
+        chapters.append((current_chapter_title or f"Untitled Chapter {len(chapters)+1}", chapter_text))
+        chapter_titles_detected.append(current_chapter_title or f"Untitled Chapter {len(chapters)+1}")
+
     return chapters, chapter_titles_detected
 
 
-def save_chapter(book, book_path, chapter_number, start_page, end_page, chapter_title, pdf_reader=None, chapter_text=None):
+def save_chapter(book, book_path, chapter_number, start_page, end_page, chapter_title, pdf_reader=None,
+                 chapter_text=None):
     """
     Сохраняет главу в виде текстового файла и создает экземпляр BookChapter в базе данных.
     """
@@ -279,6 +297,9 @@ def process_epub_file(book, book_path, full_original_path):
             soup = BeautifulSoup(content, 'html.parser')
             text_content += soup.get_text() + '\n'
 
+        # Очищаем текст от лишних пустых строк
+        text_content = clean_text(text_content)
+
         # Разбиваем текст на главы
         chapters, chapter_titles_detected = split_text_into_chapters(text_content)
 
@@ -302,19 +323,22 @@ def process_txt_file(book, book_path, full_original_path):
             except UnicodeDecodeError:
                 # Если не удалось декодировать в UTF-8, пробуем другую кодировку
                 text_content = bytes_content.decode('latin1')
+
+        # Очищаем текст от лишних пустых строк
+        text_content = clean_text(text_content)
+
+        # Разбиваем текст на главы
+        chapters, chapter_titles_detected = split_text_into_chapters(text_content)
+
+        # Сохраняем главы
+        chapter_number = 1
+        for chapter_title, chapter_text in chapters:
+            save_chapter(book, book_path, chapter_number, None, None, chapter_title, chapter_text=chapter_text)
+            chapter_number += 1
+
+        return {'success': True, 'chapter_titles': chapter_titles_detected}
     except Exception as e:
         return {'success': False, 'error': str(e)}
-
-    # Разбиваем текст на главы
-    chapters, chapter_titles_detected = split_text_into_chapters(text_content)
-
-    # Сохраняем главы
-    chapter_number = 1
-    for chapter_title, chapter_text in chapters:
-        save_chapter(book, book_path, chapter_number, None, None, chapter_title, chapter_text=chapter_text)
-        chapter_number += 1
-
-    return {'success': True, 'chapter_titles': chapter_titles_detected}
 
 
 def process_rtf_file(book, book_path, full_original_path):
