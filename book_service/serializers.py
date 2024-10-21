@@ -13,10 +13,10 @@ class GenreSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 
-class BookChapterSummarySerializer(serializers.ModelSerializer):
+class BookChapterSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookChapter
-        fields = ['id', 'chapter_title']
+        fields = ['id', 'book', 'start_page_number', 'end_page_number', 'chapter_title']
 
 
 class BookSerializer(serializers.ModelSerializer):
@@ -25,7 +25,7 @@ class BookSerializer(serializers.ModelSerializer):
         many=True
     )
     genre_details = serializers.SerializerMethodField()
-    chapters = BookChapterSummarySerializer(many=True, read_only=True)
+    chapters = BookChapterSerializer(many=True, read_only=True)
 
     class Meta:
         model = Book
@@ -83,14 +83,7 @@ class BookSerializer(serializers.ModelSerializer):
         return instance
 
 
-class BookChapterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BookChapter
-        fields = ['id', 'book', 'start_page_number', 'end_page_number', 'chapter_title']
-
-
 class PageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Page
         fields = ['chapter', 'page_number', 'content']  # id на фронте нам не нужно - уберу
-
