@@ -11,6 +11,7 @@ from rest_framework import viewsets
 from book_service.services.book_processing import process_uploaded_book
 
 
+# TODO isAuth, isOwner...
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all().order_by('-created_at').prefetch_related(
         'bookgenre_set__genre',
@@ -61,14 +62,16 @@ class PageViewSet(viewsets.ModelViewSet):
     queryset = Page.objects.all()
     serializer_class = PageSerializer
 
-    @action(detail=False, methods=['get'], url_path='get_page_content')
-    def get_page_content(self, request):
-        page_id = request.query_params.get('page_id')
+    @action(detail=False, methods=['get'], url_path='get_page_by_number')
+    def get_page_by_number(self, request):
+        chapter_id = request.query_params.get('chapter_id')
+        page_number = request.query_params.get('page_number')
 
-        if not page_id:
-            return Response({'error': 'Необходимо указать page_id'}, status=status.HTTP_400_BAD_REQUEST)
+        if not chapter_id or not page_number:
+            return Response({'error': 'Необходимо указать chapter_id и page_number'},
+                            status=status.HTTP_400_BAD_REQUEST)
         try:
-            page = Page.objects.get(id=page_id)
+            page = Page.objects.get(chapter_id=chapter_id, page_number=page_number)
         except Page.DoesNotExist:
             return Response({'error': 'Страница не найдена'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
@@ -81,4 +84,3 @@ class PageViewSet(viewsets.ModelViewSet):
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer
-

@@ -92,5 +92,5 @@ class BookChapterSerializer(serializers.ModelSerializer):
 class PageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Page
-        fields = ['id', 'chapter', 'page_number', 'content']
+        fields = ['chapter', 'page_number', 'content']  # id на фронте нам не нужно - уберу
 
