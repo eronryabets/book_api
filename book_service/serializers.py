@@ -25,7 +25,7 @@ class BookSerializer(serializers.ModelSerializer):
         many=True
     )
     genre_details = serializers.SerializerMethodField()
-    chapters = BookChapterSerializer(many=True, read_only=True)
+    chapters = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -48,6 +48,10 @@ class BookSerializer(serializers.ModelSerializer):
     def get_genre_details(self, obj):
         genres = obj.bookgenre_set.all().select_related('genre')
         return GenreSerializer([bg.genre for bg in genres], many=True).data
+
+    def get_chapters(self, obj):
+        chapters = obj.chapters.all().order_by('start_page_number')
+        return BookChapterSerializer(chapters, many=True, read_only=True).data
 
     def create(self, validated_data):
         genres = validated_data.pop('genres', [])
