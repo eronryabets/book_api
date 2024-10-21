@@ -67,14 +67,18 @@ def split_text_into_pages(text, lines_per_page=32):
     return pages
 
 
-def save_chapter(book, chapter_title, pages_content):
+def save_chapter(book, chapter_title, pages_content, current_page_number):
+    """
+    Сохраняет главу и связанные страницы в базе данных.
+    """
     chapter = BookChapter.objects.create(
         id=uuid.uuid4(),
         book=book,
         chapter_title=chapter_title
     )
 
-    page_number = 1
+    start_page_number = current_page_number
+    page_number = start_page_number
     for page_content in pages_content:
         Page.objects.create(
             id=uuid.uuid4(),
@@ -84,9 +88,11 @@ def save_chapter(book, chapter_title, pages_content):
         )
         page_number += 1
 
-    chapter.start_page_number = 1
-    chapter.end_page_number = page_number - 1
+    end_page_number = page_number - 1
+    chapter.start_page_number = start_page_number
+    chapter.end_page_number = end_page_number
     chapter.save()
 
-    return chapter
+    # Возвращаем последний использованный номер страницы
+    return end_page_number
 

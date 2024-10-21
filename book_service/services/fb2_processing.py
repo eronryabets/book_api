@@ -29,13 +29,16 @@ def process_fb2_file(book, full_original_path):
 
         total_chapters = 0
         total_pages = 0
+        current_page_number = 1  # Инициализируем номер страницы с 1
 
         # Сохраняем главы
         for chapter_title, chapter_text in chapters:
             pages = split_text_into_pages(chapter_text)
-            chapter = save_chapter(book, chapter_title, pages)
+            end_page_number = save_chapter(book, chapter_title, pages, current_page_number)
             total_chapters += 1
-            total_pages += len(pages)
+            pages_in_chapter = len(pages)
+            total_pages += pages_in_chapter
+            current_page_number = end_page_number + 1  # Обновляем номер страницы для следующей главы
 
         return {
             'success': True,
