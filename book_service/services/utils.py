@@ -71,6 +71,9 @@ def save_chapter(book, chapter_title, pages_content, current_page_number):
     """
     Сохраняет главу и связанные страницы в базе данных.
     """
+    if not chapter_title or chapter_title.strip() == '':
+        chapter_title = f"Untitled Chapter {book.chapters.count() + 1}"
+
     chapter = BookChapter.objects.create(
         id=uuid.uuid4(),
         book=book,

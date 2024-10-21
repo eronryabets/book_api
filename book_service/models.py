@@ -48,7 +48,12 @@ class BookChapter(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='chapters')
     start_page_number = models.IntegerField(null=True, blank=True)
     end_page_number = models.IntegerField(null=True, blank=True)
-    chapter_title = models.CharField(max_length=255, null=True, blank=True)
+    chapter_title = models.CharField(
+        max_length=255,
+        default="Untitled Chapter",
+        null=False,
+        blank=True
+    )
 
     def __str__(self):
         return f"{self.book.title} - {self.chapter_title or 'Глава с страницы ' + str(self.start_page_number)}"
