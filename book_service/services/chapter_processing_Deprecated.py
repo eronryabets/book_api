@@ -14,7 +14,6 @@ def processing_get_chapter(request):
         return Response({'error': 'chapter_id is a required parameter'},
                         status=status.HTTP_400_BAD_REQUEST)
     try:
-        # Находим главу по ид (uuid) //поменять модель на id TODO
         chapter = BookChapter.objects.get(id=chapter_id)
     except BookChapter.DoesNotExist:
         return Response({'error': 'Chapter not found'}, status=status.HTTP_404_NOT_FOUND)
