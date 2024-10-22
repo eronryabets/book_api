@@ -6,8 +6,25 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def clean_text(text):
-    cleaned_text = re.sub(r'\n{3,}', '\n', text)
+    if not text:
+        return ''
+
+    # Заменяем символы табуляции на пробелы
+    text = text.replace('\t', ' ')
+
+    # Удаляем избыточные пробелы (более одного пробела подряд)
+    text = re.sub(r' {2,}', ' ', text)
+
+    # Удаляем избыточные переносы строк (более двух подряд)
+    text = re.sub(r'\n{3,}', '\n', text)
+
+    # Удаляем пробелы в начале и конце каждой строки
+    lines = text.split('\n')
+    cleaned_lines = [line.strip() for line in lines]
+    cleaned_text = '\n'.join(cleaned_lines)
+
     return cleaned_text.strip()
 
 
