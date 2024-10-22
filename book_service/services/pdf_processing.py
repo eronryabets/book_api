@@ -1,5 +1,3 @@
-# pdf_processing.py
-
 from django.core.files.storage import default_storage
 from PyPDF2 import PdfReader
 from .utils import save_chapter, detect_chapter_title, split_text_into_pages, clean_text
@@ -20,8 +18,16 @@ def process_pdf_file(book, full_original_path):
         current_chapter_title = None
         current_chapter_text = ''
         untitled_created = False  # Флаг для создания "Untitled Chapter"
+        toc_detected = False  # Флаг для обнаружения таблицы содержания
+
+        # Установим порог количества заголовков на странице для определения TOC
+        TOC_CHAPTER_THRESHOLD = 3
 
         for i in range(total_pages_in_pdf):
+            if toc_detected:
+                logger.debug(f"TOC уже обнаружена. Пропускаем страницу {i + 1}.")
+                break  # Прекращаем обработку после обнаружения TOC
+
             page = pdf_reader.pages[i]
             page_text = page.extract_text()
             if not page_text:
@@ -31,6 +37,24 @@ def process_pdf_file(book, full_original_path):
 
             # Разделяем страницу на строки
             lines = page_text.split('\n')
+            chapter_count_on_page = 0
+            chapter_titles_on_page = []
+
+            for line in lines:
+                potential_title = detect_chapter_title(line)
+                if potential_title:
+                    chapter_count_on_page += 1
+                    chapter_titles_on_page.append(potential_title)
+
+            logger.debug(f"На странице {i + 1} обнаружено {chapter_count_on_page} заголовков глав.")
+
+            # Если количество заголовков на странице превышает порог, считаем её TOC
+            if chapter_count_on_page >= TOC_CHAPTER_THRESHOLD:
+                logger.debug(f"Страница {i + 1} считается Таблицей Содержания (TOC). Прекращаем распознавание глав.")
+                toc_detected = True
+                continue  # Пропускаем эту страницу без распознавания глав
+
+            # Теперь обрабатываем страницы, не являющиеся TOC
             for line in lines:
                 potential_title = detect_chapter_title(line)
                 if potential_title:
