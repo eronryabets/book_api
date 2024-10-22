@@ -8,6 +8,7 @@ def clean_text(text):
     return cleaned_text.strip()
 
 
+#  for DPF processing
 def detect_chapter_title(line):
     if not line:
         return None
@@ -17,13 +18,17 @@ def detect_chapter_title(line):
     if len(line) < 3:
         return None
 
-    if len(line.split()) > 8:
+    words = line.split()
+    if len(words) > 8:
         return None
 
     chapter_keywords = ['chapter', 'глава', 'part', 'часть', 'section', 'раздел']
+    line_lower = line.lower()
 
-    if len(line) < 50 and (line.isupper() or any(line.lower().startswith(keyword) for keyword in chapter_keywords)):
-        return line
+    # Проверяем наличие ключевых слов в начале строки
+    for keyword in chapter_keywords:
+        if line_lower.startswith(keyword):
+            return line
 
     return None
 
@@ -41,8 +46,8 @@ def split_text_into_chapters(text):
             if current_chapter_lines:
                 chapter_text = '\n'.join(current_chapter_lines)
                 chapter_text = clean_text(chapter_text)
-                chapters.append((current_chapter_title or f"Untitled Chapter {len(chapters) + 1}", chapter_text))
-                chapter_titles_detected.append(current_chapter_title or f"Untitled Chapter {len(chapters) + 1}")
+                chapters.append((current_chapter_title or f"Без названия {len(chapters) + 1}", chapter_text))
+                chapter_titles_detected.append(current_chapter_title or f"Без названия {len(chapters) + 1}")
             current_chapter_title = potential_title
             current_chapter_lines = []
         else:
@@ -51,8 +56,8 @@ def split_text_into_chapters(text):
     if current_chapter_lines:
         chapter_text = '\n'.join(current_chapter_lines)
         chapter_text = clean_text(chapter_text)
-        chapters.append((current_chapter_title or f"Untitled Chapter {len(chapters) + 1}", chapter_text))
-        chapter_titles_detected.append(current_chapter_title or f"Untitled Chapter {len(chapters) + 1}")
+        chapters.append((current_chapter_title or f"Без названия {len(chapters) + 1}", chapter_text))
+        chapter_titles_detected.append(current_chapter_title or f"Без названия {len(chapters) + 1}")
 
     return chapters, chapter_titles_detected
 
@@ -97,4 +102,3 @@ def save_chapter(book, chapter_title, pages_content, current_page_number):
 
     # Возвращаем последний использованный номер страницы
     return end_page_number
-
