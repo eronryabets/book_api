@@ -1,4 +1,3 @@
-from django.core.files.storage import default_storage
 import uuid
 from book_service.models import BookChapter, Page
 import re
@@ -42,8 +41,8 @@ def split_text_into_chapters(text):
             if current_chapter_lines:
                 chapter_text = '\n'.join(current_chapter_lines)
                 chapter_text = clean_text(chapter_text)
-                chapters.append((current_chapter_title or f"Без названия {len(chapters) + 1}", chapter_text))
-                chapter_titles_detected.append(current_chapter_title or f"Без названия {len(chapters) + 1}")
+                chapters.append((current_chapter_title or f"Untitled Chapter {len(chapters) + 1}", chapter_text))
+                chapter_titles_detected.append(current_chapter_title or f"Untitled Chapter {len(chapters) + 1}")
             current_chapter_title = potential_title
             current_chapter_lines = []
         else:
@@ -52,13 +51,13 @@ def split_text_into_chapters(text):
     if current_chapter_lines:
         chapter_text = '\n'.join(current_chapter_lines)
         chapter_text = clean_text(chapter_text)
-        chapters.append((current_chapter_title or f"Без названия {len(chapters) + 1}", chapter_text))
-        chapter_titles_detected.append(current_chapter_title or f"Без названия {len(chapters) + 1}")
+        chapters.append((current_chapter_title or f"Untitled Chapter {len(chapters) + 1}", chapter_text))
+        chapter_titles_detected.append(current_chapter_title or f"Untitled Chapter {len(chapters) + 1}")
 
     return chapters, chapter_titles_detected
 
 
-def split_text_into_pages(text, lines_per_page=32):
+def split_text_into_pages(text, lines_per_page=26):
     lines = text.split('\n')
     pages = []
     for i in range(0, len(lines), lines_per_page):
