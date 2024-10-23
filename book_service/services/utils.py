@@ -38,7 +38,14 @@ def detect_chapter_title(line):
     if len(words) > 8:
         return None
 
-    chapter_keywords = ['chapter', 'глава', 'part', 'часть', 'section', 'раздел']
+    chapter_keywords = [
+        'chapter',
+        'глава',
+        'part',
+        'часть',
+        'section',
+        'раздел'
+    ]
     line_lower = line.lower()
 
     # Проверяем наличие ключевых слов в начале строки
@@ -62,7 +69,7 @@ def split_text_into_chapters(text):
             if current_chapter_lines:
                 chapter_text = '\n'.join(current_chapter_lines)
                 chapter_text = clean_text(chapter_text)
-                chapters.append((current_chapter_title or f"Без названия {len(chapters) + 1}", chapter_text))
+                chapters.append((current_chapter_title or f"Untitled Chapter {len(chapters) + 1}", chapter_text))
                 chapter_titles_detected.append(current_chapter_title or f"Без названия {len(chapters) + 1}")
             current_chapter_title = potential_title
             current_chapter_lines = []
@@ -78,12 +85,29 @@ def split_text_into_chapters(text):
     return chapters, chapter_titles_detected
 
 
-def split_text_into_pages(text, lines_per_page=26):
+def split_text_into_pages(text, lines_per_page=26, max_line_length=125):
+    def split_long_line(line1, max_length):
+        """
+        Split a long line into multiple lines, each of length not exceeding max_length.
+        """
+        if len(line1) <= max_length:
+            return [line1]
+
+        # Split line into chunks of max_length characters
+        return [line1[e:e + max_length] for e in range(0, len(line1), max_length)]
+
     lines = text.split('\n')
+    adjusted_lines = []
+
+    # Iterate over each line and split it if necessary
+    for line in lines:
+        adjusted_lines.extend(split_long_line(line, max_line_length))
+
     pages = []
-    for i in range(0, len(lines), lines_per_page):
-        page_content = '\n'.join(lines[i:i + lines_per_page])
+    for i in range(0, len(adjusted_lines), lines_per_page):
+        page_content = '\n'.join(adjusted_lines[i:i + lines_per_page])
         pages.append(page_content)
+
     return pages
 
 
