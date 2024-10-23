@@ -1,9 +1,6 @@
 from django.core.files.storage import default_storage
 from PyPDF2 import PdfReader
 from .utils import save_chapter, detect_chapter_title, split_text_into_pages, clean_text
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 def process_pdf_file(book, full_original_path):
@@ -25,13 +22,11 @@ def process_pdf_file(book, full_original_path):
 
         for i in range(total_pages_in_pdf):
             if toc_detected:
-                logger.debug(f"TOC уже обнаружена. Пропускаем страницу {i + 1}.")
                 break  # Прекращаем обработку после обнаружения TOC
 
             page = pdf_reader.pages[i]
             page_text = page.extract_text()
             if not page_text:
-                logger.debug(f"Страница {i + 1} пуста, пропускаем.")
                 continue  # Пропускаем пустые страницы
             page_text = clean_text(page_text)
 
@@ -46,11 +41,8 @@ def process_pdf_file(book, full_original_path):
                     chapter_count_on_page += 1
                     chapter_titles_on_page.append(potential_title)
 
-            logger.debug(f"На странице {i + 1} обнаружено {chapter_count_on_page} заголовков глав.")
-
             # Если количество заголовков на странице превышает порог, считаем её TOC
             if chapter_count_on_page >= TOC_CHAPTER_THRESHOLD:
-                logger.debug(f"Страница {i + 1} считается Таблицей Содержания (TOC). Прекращаем распознавание глав.")
                 toc_detected = True
                 continue  # Пропускаем эту страницу без распознавания глав
 
@@ -58,7 +50,6 @@ def process_pdf_file(book, full_original_path):
             for line in lines:
                 potential_title = detect_chapter_title(line)
                 if potential_title:
-                    logger.debug(f"Обнаружен заголовок главы: '{potential_title}' на странице {i + 1}")
 
                     # Если до этого была накоплена глава, сохраняем её
                     if current_chapter_title and current_chapter_text:
@@ -72,8 +63,6 @@ def process_pdf_file(book, full_original_path):
 
                     # Если заголовок найден первый раз и есть текст до него, создаём "Untitled Chapter"
                     if not untitled_created and not current_chapter_title and current_chapter_text:
-                        logger.debug(
-                            f"Создаём 'Untitled Chapter' с {len(current_chapter_text.splitlines())} строк до первой главы.")
                         pages = split_text_into_pages(current_chapter_text)
                         end_page_number = save_chapter(book, "Untitled Chapter", pages, current_page_number)
                         total_chapters += 1
@@ -93,7 +82,6 @@ def process_pdf_file(book, full_original_path):
         if current_chapter_text:
             if current_chapter_title:
                 # Если есть текущая глава, добавляем текст в неё
-                logger.debug(f"Добавляем оставшийся текст в главу '{current_chapter_title}'.")
                 pages = split_text_into_pages(current_chapter_text)
                 end_page_number = save_chapter(book, current_chapter_title, pages, current_page_number)
                 total_chapters += 1
@@ -101,14 +89,12 @@ def process_pdf_file(book, full_original_path):
                 chapter_titles_detected.append(current_chapter_title)
             else:
                 # Если не было ни одной распознанной главы, сохраняем весь текст как "Untitled Chapter"
-                logger.debug(f"Сохраняем весь текст как 'Untitled Chapter'.")
                 pages = split_text_into_pages(current_chapter_text)
                 end_page_number = save_chapter(book, "Untitled Chapter", pages, current_page_number)
                 total_chapters += 1
                 total_pages += len(pages)
                 chapter_titles_detected.append("Untitled Chapter")
 
-        logger.info(f"Обработка PDF завершена: {total_chapters} глав, {total_pages} страниц.")
         return {
             'success': True,
             'chapter_titles': chapter_titles_detected,
@@ -116,5 +102,4 @@ def process_pdf_file(book, full_original_path):
             'total_pages': total_pages
         }
     except Exception as e:
-        logger.error(f"Ошибка при обработке PDF: {str(e)}")
         return {'success': False, 'error': str(e)}

@@ -2,10 +2,6 @@ import uuid
 from book_service.models import BookChapter, Page
 import re
 
-import logging
-
-logger = logging.getLogger(__name__)
-
 
 def clean_text(text):
     if not text:
@@ -119,8 +115,6 @@ def save_chapter(book, chapter_title, pages_content, current_page_number):
     chapter.start_page_number = start_page_number
     chapter.end_page_number = end_page_number
     chapter.save()
-
-    logger.debug(f"Сохранена глава '{chapter_title}' с {start_page_number} по {end_page_number} страницу.")
 
     # Возвращаем последний использованный номер страницы
     return end_page_number
