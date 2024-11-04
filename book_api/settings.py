@@ -217,19 +217,25 @@ CORS_ALLOW_METHODS = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
+    "http://drunar.space:3000",  # URL фронтенда
+
     "http://auth.drunar.space",
     "http://user.drunar.space",
     "http://text.drunar.space",
     "http://book.drunar.space",
-    "http://drunar.space:3000",  # URL фронтенда
+    "http://translator.drunar.space",
+
 ]
 
 CSRF_TRUSTED_ORIGINS = [
+    "http://drunar.space:3000",  # URL фронтенда
+
     "http://auth.drunar.space",
     "http://user.drunar.space",
     "http://text.drunar.space",
     "http://book.drunar.space",
-    "http://drunar.space:3000",  # URL фронтенда
+    "http://translator.drunar.space",
+
 ]
 
 LOGGING = {
