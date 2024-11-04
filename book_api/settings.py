@@ -125,20 +125,21 @@ REST_FRAMEWORK = {
     ],
 }
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=10),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'VERIFYING_KEY': None,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'USER_ID_FIELD': 'id',  # Укажите поле ID, которое используется в вашей модели пользователя (UUID)
-    'USER_ID_CLAIM': 'user_id',  # Поле, которое будет сохранено в JWT токене для идентификации пользователя
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_TYPE_CLAIM': 'token_type',
-}
+# Auth Logic in AUTH service!
+# SIMPLE_JWT = {
+#     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+#     'REFRESH_TOKEN_LIFETIME': timedelta(days=10),
+#     'ROTATE_REFRESH_TOKENS': False,
+#     'BLACKLIST_AFTER_ROTATION': True,
+#     'ALGORITHM': 'HS256',
+#     'SIGNING_KEY': SECRET_KEY,
+#     'VERIFYING_KEY': None,
+#     'AUTH_HEADER_TYPES': ('Bearer',),
+#     'USER_ID_FIELD': 'id',  # Укажите поле ID, которое используется в вашей модели пользователя (UUID)
+#     'USER_ID_CLAIM': 'user_id',  # Поле, которое будет сохранено в JWT токене для идентификации пользователя
+#     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+#     'TOKEN_TYPE_CLAIM': 'token_type',
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
