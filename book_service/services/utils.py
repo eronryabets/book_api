@@ -86,15 +86,33 @@ def split_text_into_chapters(text):
 
 
 def split_text_into_pages(text, lines_per_page=26, max_line_length=125):
-    def split_long_line(line1, max_length):
+    def split_long_line(line, max_length):
         """
-        Split a long line into multiple lines, each of length not exceeding max_length.
+        Split a line into multiple lines without splitting words. If a word doesn't fit, move it to the next line.
         """
-        if len(line1) <= max_length:
-            return [line1]
+        words = line.split(' ')
+        current_line = ""
+        lines = []
 
-        # Split line into chunks of max_length characters
-        return [line1[e:e + max_length] for e in range(0, len(line1), max_length)]
+        for word in words:
+            # Check if adding the word would exceed the max length
+            if len(current_line) + len(word) + (1 if current_line else 0) <= max_length:
+                # Add the word to the current line
+                if current_line:
+                    current_line += ' ' + word
+                else:
+                    current_line = word
+            else:
+                # If the word doesn't fit, add the current line to lines and start a new line
+                if current_line:
+                    lines.append(current_line)
+                current_line = word
+
+        # Append the last line if it's not empty
+        if current_line:
+            lines.append(current_line)
+
+        return lines
 
     lines = text.split('\n')
     adjusted_lines = []
