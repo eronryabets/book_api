@@ -2,7 +2,7 @@ import ebooklib
 from django.core.files.storage import default_storage
 from ebooklib import epub
 from bs4 import BeautifulSoup
-from .utils import clean_text, split_text_into_chapters, split_text_into_pages, save_chapter
+from .utils import clean_text, split_text_into_chapters, split_text_into_pages_by_lines, save_chapter
 
 
 def process_epub_file(book, full_original_path):
@@ -50,7 +50,7 @@ def process_epub_file(book, full_original_path):
 
         # Сохраняем главы
         for chapter_title, chapter_text in chapters:
-            pages = split_text_into_pages(chapter_text)
+            pages = split_text_into_pages_by_lines(chapter_text)
             end_page_number = save_chapter(book, chapter_title, pages, current_page_number)
             total_chapters += 1
             pages_in_chapter = len(pages)

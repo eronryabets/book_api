@@ -1,5 +1,5 @@
 from django.core.files.storage import default_storage
-from .utils import clean_text, split_text_into_chapters, save_chapter, split_text_into_pages
+from .utils import clean_text, split_text_into_chapters, save_chapter, split_text_into_pages_by_lines
 
 
 def process_txt_file(book, full_original_path):
@@ -37,7 +37,7 @@ def process_txt_file(book, full_original_path):
 
         # Сохраняем главы
         for chapter_title, chapter_text in chapters:
-            pages = split_text_into_pages(chapter_text)
+            pages = split_text_into_pages_by_lines(chapter_text)
             end_page_number = save_chapter(book, chapter_title, pages, current_page_number)
             total_chapters += 1
             pages_in_chapter = len(pages)

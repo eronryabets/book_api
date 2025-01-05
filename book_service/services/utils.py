@@ -1,15 +1,12 @@
 import uuid
-from book_service.models import BookChapter, Page
 import re
+from book_service.models import BookChapter, Page
 
 
 def clean_text(text):
     """
     Очищает текст от лишних табуляций, лишних пробелов и переносов строк.
     Возвращает итоговую «чистую» строку.
-
-    :param text: Исходная строка
-    :return: Очищенный текст
     """
     if not text:
         return ''
@@ -31,15 +28,11 @@ def clean_text(text):
     return cleaned_text.strip()
 
 
-#  for DPF processing
 def detect_chapter_title(line):
     """
-        Проверяет, является ли строка названием главы, ориентируясь на ключевые слова
-        и структуру строки. Возвращает строку, если она распознана как заголовок,
-        иначе None.
-
-        :param line: Текст строки для анализа
-        :return: Заголовок главы или None
+    Проверяет, является ли строка названием главы, ориентируясь на ключевые слова
+    и структуру строки. Возвращает строку, если она распознана как заголовок,
+    иначе None.
     """
     if not line:
         return None
@@ -73,11 +66,11 @@ def detect_chapter_title(line):
 
 def split_text_into_chapters(text):
     """
-      Разбивает весь текст на главы, опираясь на detect_chapter_title для определения заголовков.
-      Если заголовок не найден, формирует главу с названием «Без названия n».
+    Разбивает весь текст на главы, опираясь на detect_chapter_title для определения заголовков.
+    Если заголовок не найден, формирует главу с названием «Без названия n».
 
-      :param text: Полный текст для разбивки
-      :return: Кортеж из списка кортежей (название главы, текст главы) и списка обнаруженных названий глав
+    :param text: Полный текст для разбивки
+    :return: Кортеж из списка кортежей (название главы, текст главы) и списка обнаруженных названий глав
     """
     lines = text.split('\n')
     chapters = []
@@ -88,73 +81,57 @@ def split_text_into_chapters(text):
     for line in lines:
         potential_title = detect_chapter_title(line)
         if potential_title:
+            # Если уже есть накопленный текст, сохраняем предыдущую главу
             if current_chapter_lines:
                 chapter_text = '\n'.join(current_chapter_lines)
                 chapter_text = clean_text(chapter_text)
-                chapters.append((current_chapter_title or f"Untitled Chapter {len(chapters) + 1}", chapter_text))
-                chapter_titles_detected.append(current_chapter_title or f"Без названия {len(chapters) + 1}")
+                chapters.append(
+                    (current_chapter_title or f"Untitled Chapter {len(chapters) + 1}",
+                     chapter_text)
+                )
+                chapter_titles_detected.append(
+                    current_chapter_title or f"Без названия {len(chapters)}"
+                )
+            # Начинаем новую главу
             current_chapter_title = potential_title
             current_chapter_lines = []
         else:
             current_chapter_lines.append(line)
 
+    # Сохраняем последнюю накопленную главу, если есть
     if current_chapter_lines:
         chapter_text = '\n'.join(current_chapter_lines)
         chapter_text = clean_text(chapter_text)
-        chapters.append((current_chapter_title or f"Без названия {len(chapters) + 1}", chapter_text))
-        chapter_titles_detected.append(current_chapter_title or f"Без названия {len(chapters) + 1}")
+        chapters.append(
+            (current_chapter_title or f"Без названия {len(chapters) + 1}",
+             chapter_text)
+        )
+        chapter_titles_detected.append(
+            current_chapter_title or f"Без названия {len(chapters)}"
+        )
 
     return chapters, chapter_titles_detected
 
 
-def split_text_into_pages(text, lines_per_page=26, max_line_length=125):
+def split_text_into_pages_by_lines(chapter_text, lines_per_page=20):
     """
-        Разбивает текст главы на страницы, учитывая длину строки и количество строк на странице.
-        Длинные строки дополнительно разбиваются без разрыва слов.
-
-        :param text: Текст для разбиения
-        :param lines_per_page: Количество строк на одной странице
-        :param max_line_length: Максимальная длина строки
-        :return: Список страниц, каждая страница — отдельная строка текста
+    Разбивает текст одной главы на страницы по 20 (по умолчанию) строк на страницу.
+    :param chapter_text: Текст всей главы
+    :param lines_per_page: Сколько строк будет на одной "логической" странице
+    :return: Список страниц, где каждая страница — это строка текста, содержащая 10 строк
     """
-    def split_long_line(line, max_length):
-        """
-        Split a line into multiple lines without splitting words. If a word doesn't fit, move it to the next line.
-        """
-        words = line.split(' ')
-        current_line = ""
-        lines = []
-
-        for word in words:
-            # Check if adding the word would exceed the max length
-            if len(current_line) + len(word) + (1 if current_line else 0) <= max_length:
-                # Add the word to the current line
-                if current_line:
-                    current_line += ' ' + word
-                else:
-                    current_line = word
-            else:
-                # If the word doesn't fit, add the current line to lines and start a new line
-                if current_line:
-                    lines.append(current_line)
-                current_line = word
-
-        # Append the last line if it's not empty
-        if current_line:
-            lines.append(current_line)
-
-        return lines
-
-    lines = text.split('\n')
-    adjusted_lines = []
-
-    # Iterate over each line and split it if necessary
-    for line in lines:
-        adjusted_lines.extend(split_long_line(line, max_line_length))
+    # Сначала чистим от лишних символов
+    cleaned = clean_text(chapter_text)
+    # Разбиваем по переносам строк
+    lines = cleaned.split('\n')
+    # Убираем возможные пустые хвостовые строки (если нужно)
+    # lines = [l for l in lines if l.strip()]
 
     pages = []
-    for i in range(0, len(adjusted_lines), lines_per_page):
-        page_content = '\n'.join(adjusted_lines[i:i + lines_per_page])
+    for i in range(0, len(lines), lines_per_page):
+        chunk = lines[i : i + lines_per_page]
+        # Склеиваем обратно
+        page_content = '\n'.join(chunk)
         pages.append(page_content)
 
     return pages
@@ -162,14 +139,14 @@ def split_text_into_pages(text, lines_per_page=26, max_line_length=125):
 
 def save_chapter(book, chapter_title, pages_content, current_page_number):
     """
-        Создаёт модель главы (BookChapter) и связанные с ней страницы (Page) в базе данных.
-        Возвращает последний номер страницы, использованный для сохранённой главы.
+    Создаёт модель главы (BookChapter) и связанные с ней страницы (Page) в базе данных.
+    Возвращает последний номер страницы, использованный для сохранённой главы.
 
-        :param book: Модель Book, к которой привязана глава
-        :param chapter_title: Название главы
-        :param pages_content: Список текстов страниц
-        :param current_page_number: Текущий номер страницы, начиная с которого будут нумероваться новые страницы
-        :return: Последний номер страницы, использованный для сохранённой главы
+    :param book: Модель Book, к которой привязана глава
+    :param chapter_title: Название главы
+    :param pages_content: Список текстов страниц (список строк)
+    :param current_page_number: Текущий номер страницы, начиная с которого будут нумероваться новые страницы
+    :return: Последний номер страницы, использованный для сохранённой главы
     """
     if not chapter_title or chapter_title.strip() == '':
         chapter_title = f"Untitled Chapter {book.chapters.count() + 1}"
@@ -182,6 +159,7 @@ def save_chapter(book, chapter_title, pages_content, current_page_number):
 
     start_page_number = current_page_number
     page_number = start_page_number
+
     for page_content in pages_content:
         Page.objects.create(
             id=uuid.uuid4(),
@@ -196,5 +174,15 @@ def save_chapter(book, chapter_title, pages_content, current_page_number):
     chapter.end_page_number = end_page_number
     chapter.save()
 
-    # Возвращаем последний использованный номер страницы
     return end_page_number
+
+
+# Пример использования:
+# def process_book_text(book, full_text):
+#     # Разбиваем на главы
+#     chapters_data, _ = split_text_into_chapters(full_text)
+#     current_page_number = 1
+#     # Для каждой главы делаем разбивку по 10 строк
+#     for chapter_title, chapter_text in chapters_data:
+#         pages = split_text_into_pages_by_lines(chapter_text, lines_per_page=10)
+#         current_page_number = save_chapter(book, chapter_title, pages, current_page_number)
