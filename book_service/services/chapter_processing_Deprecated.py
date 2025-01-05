@@ -8,6 +8,14 @@ from book_service.models import BookChapter
 
 
 def processing_get_chapter(request):
+    """
+    Возвращает содержание конкретной главы по её идентификатору (chapter_id).
+    Загружает текст главы из файла и передаёт его вместе с названием главы в ответ.
+
+    :param request: HTTP-запрос, содержащий параметр chapter_id в query_params
+    :return: Response объект с названием главы (chapter_title) и её текстом (chapter_text),
+                                    либо с сообщениями об ошибках и соответствующим статусом
+    """
     chapter_id = request.query_params.get('chapter_id')
 
     if not chapter_id:

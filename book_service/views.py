@@ -13,6 +13,12 @@ from book_service.services.book_processing import process_uploaded_book
 
 # TODO isAuth, isOwner...
 class BookViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для работы с книгами (Book).
+    - Позволяет просматривать, создавать, редактировать и удалять книги.
+    - Подключён кастомный фильтр BookFilter для поиска по названию и жанрам.
+    - Имеет отдельный метод «upload_book», который обрабатывает загружаемую книгу.
+    """
     queryset = Book.objects.all().order_by('-created_at').prefetch_related(
         'bookgenre_set__genre',
         'chapters'
@@ -37,6 +43,11 @@ class BookViewSet(viewsets.ModelViewSet):
 
 
 class BookChapterViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для работы с главами книги (BookChapter).
+    - Позволяет просматривать, создавать, редактировать и удалять главы.
+    - Содержит метод «get_chapter_pages» для получения всех страниц главы.
+    """
     queryset = BookChapter.objects.all()
     serializer_class = BookChapterSerializer
 
@@ -59,6 +70,11 @@ class BookChapterViewSet(viewsets.ModelViewSet):
 
 
 class PageViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для работы со страницами (Page).
+    - Позволяет просматривать, создавать, редактировать и удалять страницы.
+    - Содержит метод «get_page_by_number» для получения конкретной страницы по номеру и ID главы.
+    """
     queryset = Page.objects.all()
     serializer_class = PageSerializer
 
@@ -82,5 +98,10 @@ class PageViewSet(viewsets.ModelViewSet):
 
 
 class GenreViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для работы с жанрами (Genre).
+    - Позволяет просматривать, создавать, редактировать и удалять жанры.
+    - Сортировка по алфавиту (name).
+    """
     queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer

@@ -15,6 +15,14 @@ from .rtf_processing import process_rtf_file
 
 
 def process_uploaded_book(request):
+    """
+    Обрабатывает загруженную книгу, создаёт запись в базе данных и прикрепляет выбранные жанры.
+    Определяет тип файла и обрабатывает его соответствующим способом (PDF, FB2, EPUB, TXT или RTF),
+    а затем удаляет исходный файл.
+
+    :param request: HTTP-запрос, содержащий данные (user_id, title, description, language, genres, file, cover_image)
+    :return: Response объект со статусом выполнения и результатом обработки (имена глав, статус, ошибки)
+    """
     with transaction.atomic():
         user_id = request.data.get('user_id')
         description = request.data.get('description')
@@ -89,4 +97,3 @@ def process_uploaded_book(request):
         return Response(
             {'message': 'Книга успешно загружена и обработана', 'chapter_titles': result['chapter_titles']},
             status=status.HTTP_201_CREATED)
-

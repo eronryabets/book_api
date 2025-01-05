@@ -4,6 +4,19 @@ from .utils import split_text_into_chapters, split_text_into_pages, save_chapter
 
 
 def process_fb2_file(book, full_original_path):
+    """
+    Обрабатывает загруженный FB2-файл, извлекает текст, разбивает его на главы и страницы.
+    Затем сохраняет каждую главу в базе данных, вычисляя общее количество глав и страниц.
+
+    :param book: Модель Book, к которой будут привязаны новые главы
+    :param full_original_path: Полный путь к файлу FB2
+    :return: Словарь с ключами:
+        - 'success': bool, успешность обработки
+        - 'chapter_titles': список названий глав
+        - 'total_chapters': общее количество глав
+        - 'total_pages': общее количество страниц
+        - 'error': текст ошибки (если возникла)
+    """
     try:
         with default_storage.open(full_original_path, 'rb') as f:
             xml_content = f.read()

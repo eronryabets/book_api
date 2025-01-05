@@ -8,18 +8,30 @@ from book_service.models import Book, Genre, BookGenre, BookChapter, Page
 
 
 class GenreSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели Genre. Возвращает идентификатор и название жанра.
+    """
     class Meta:
         model = Genre
         fields = ['id', 'name']
 
 
 class BookChapterSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели BookChapter. Включает ключевые поля,
+    связанные с главой (id, книга, начальный и конечный номера страниц, заголовок).
+    """
     class Meta:
         model = BookChapter
         fields = ['id', 'book', 'start_page_number', 'end_page_number', 'chapter_title']
 
 
 class BookSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели Book. Помимо основных полей книги,
+    поддерживает работу со связанными жанрами и главами.
+    Позволяет создавать и обновлять книгу вместе с указанием жанров и обложки.
+    """
     genres = serializers.PrimaryKeyRelatedField(
         queryset=Genre.objects.all(),
         many=True
@@ -88,6 +100,9 @@ class BookSerializer(serializers.ModelSerializer):
 
 
 class PageSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели Page, включающий информацию о главе, номере и тексте страницы.
+    """
     class Meta:
         model = Page
         fields = ['chapter', 'page_number', 'content']  # id на фронте нам не нужно - уберу

@@ -10,6 +10,10 @@ logger = logging.getLogger(__name__)
 
 
 class JWTAuthentication(BaseAuthentication):
+    """
+    Класс для аутентификации по JWT. Проверяет токен в cookies (access_token) или заголовке Authorization (Bearer).
+    Если токен валиден и не просрочен — создаёт объект SimpleUser с декодированными данными.
+    """
     def authenticate(self, request):
         logger.info("Начало аутентификации в JWTAuthentication")
         token = request.COOKIES.get('access_token')
@@ -41,6 +45,9 @@ class JWTAuthentication(BaseAuthentication):
 
 
 class IsOwner(BasePermission):
+    """
+    Пользовательский пермишн, позволяющий доступ только владельцу объекта (obj.user_id совпадает с request.user.id).
+    """
     def has_object_permission(self, request, view, obj):
         # Проверяем, что текущий пользователь является владельцем объекта
         return obj.user_id == request.user.id

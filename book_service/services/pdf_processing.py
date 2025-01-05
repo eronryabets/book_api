@@ -4,6 +4,19 @@ from .utils import save_chapter, detect_chapter_title, split_text_into_pages, cl
 
 
 def process_pdf_file(book, full_original_path):
+    """
+    Обрабатывает загруженный PDF-файл, извлекает из него текст, определяет главы и страницы,
+    а затем сохраняет каждую главу в базе данных. Может определить и пропустить оглавление (TOC).
+
+    :param book: Модель Book, к которой будут привязаны новые главы
+    :param full_original_path: Полный путь к загруженному PDF-файлу
+    :return: Словарь с ключами:
+        - 'success': bool, успешность обработки
+        - 'chapter_titles': список названий глав
+        - 'total_chapters': общее количество глав
+        - 'total_pages': общее количество страниц
+        - 'error': текст ошибки (если возникла)
+    """
     try:
         pdf_reader = PdfReader(default_storage.open(full_original_path, 'rb'))
         total_pages_in_pdf = len(pdf_reader.pages)

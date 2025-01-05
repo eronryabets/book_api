@@ -4,6 +4,13 @@ import re
 
 
 def clean_text(text):
+    """
+    Очищает текст от лишних табуляций, лишних пробелов и переносов строк.
+    Возвращает итоговую «чистую» строку.
+
+    :param text: Исходная строка
+    :return: Очищенный текст
+    """
     if not text:
         return ''
 
@@ -26,6 +33,14 @@ def clean_text(text):
 
 #  for DPF processing
 def detect_chapter_title(line):
+    """
+        Проверяет, является ли строка названием главы, ориентируясь на ключевые слова
+        и структуру строки. Возвращает строку, если она распознана как заголовок,
+        иначе None.
+
+        :param line: Текст строки для анализа
+        :return: Заголовок главы или None
+    """
     if not line:
         return None
 
@@ -57,6 +72,13 @@ def detect_chapter_title(line):
 
 
 def split_text_into_chapters(text):
+    """
+      Разбивает весь текст на главы, опираясь на detect_chapter_title для определения заголовков.
+      Если заголовок не найден, формирует главу с названием «Без названия n».
+
+      :param text: Полный текст для разбивки
+      :return: Кортеж из списка кортежей (название главы, текст главы) и списка обнаруженных названий глав
+    """
     lines = text.split('\n')
     chapters = []
     current_chapter_title = None
@@ -86,6 +108,15 @@ def split_text_into_chapters(text):
 
 
 def split_text_into_pages(text, lines_per_page=26, max_line_length=125):
+    """
+        Разбивает текст главы на страницы, учитывая длину строки и количество строк на странице.
+        Длинные строки дополнительно разбиваются без разрыва слов.
+
+        :param text: Текст для разбиения
+        :param lines_per_page: Количество строк на одной странице
+        :param max_line_length: Максимальная длина строки
+        :return: Список страниц, каждая страница — отдельная строка текста
+    """
     def split_long_line(line, max_length):
         """
         Split a line into multiple lines without splitting words. If a word doesn't fit, move it to the next line.
@@ -131,7 +162,14 @@ def split_text_into_pages(text, lines_per_page=26, max_line_length=125):
 
 def save_chapter(book, chapter_title, pages_content, current_page_number):
     """
-    Сохраняет главу и связанные страницы в базе данных.
+        Создаёт модель главы (BookChapter) и связанные с ней страницы (Page) в базе данных.
+        Возвращает последний номер страницы, использованный для сохранённой главы.
+
+        :param book: Модель Book, к которой привязана глава
+        :param chapter_title: Название главы
+        :param pages_content: Список текстов страниц
+        :param current_page_number: Текущий номер страницы, начиная с которого будут нумероваться новые страницы
+        :return: Последний номер страницы, использованный для сохранённой главы
     """
     if not chapter_title or chapter_title.strip() == '':
         chapter_title = f"Untitled Chapter {book.chapters.count() + 1}"

@@ -6,6 +6,19 @@ from .utils import clean_text, split_text_into_chapters, split_text_into_pages, 
 
 
 def process_epub_file(book, full_original_path):
+    """
+    Обрабатывает загруженный EPUB-файл, извлекает текст и разбивает его на главы и страницы.
+    Затем сохраняет каждую главу в базе данных, вычисляя общее количество глав и страниц.
+
+    :param book: Модель Book, к которой будут привязаны новые главы
+    :param full_original_path: Полный путь к файлу EPUB
+    :return: Словарь с ключами:
+        - 'success': bool, успешность обработки
+        - 'chapter_titles': список названий глав
+        - 'total_chapters': общее количество глав
+        - 'total_pages': общее количество страниц
+        - 'error': текст ошибки (если возникла)
+    """
     try:
         epub_full_path = default_storage.path(full_original_path)
         epub_book = epub.read_epub(epub_full_path)

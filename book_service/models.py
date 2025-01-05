@@ -3,11 +3,19 @@ import uuid
 
 
 def book_cover_upload_path(instance, filename):
-    # Путь для обложки книги: /user_id/cover/
+    """
+    Формирует путь для загрузки обложки книги:
+    /user_id/cover/<имя файла>.
+    """
     return f'{instance.user_id}/cover/{filename}'
 
 
 class Book(models.Model):
+    """
+    Модель книги с основной информацией (название, описание, язык, обложка),
+    привязкой к пользователю (user_id) и связью с жанрами.
+    Хранит общее количество глав и страниц.
+    """
     user_id = models.UUIDField(editable=False)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
@@ -26,6 +34,10 @@ class Book(models.Model):
 
 
 class Genre(models.Model):
+    """
+    Модель жанра книги. Имеет уникальное название (name).
+    Связана с книгами через промежуточную модель BookGenre.
+    """
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
@@ -33,6 +45,10 @@ class Genre(models.Model):
 
 
 class BookGenre(models.Model):
+    """
+    Промежуточная модель, связывающая Book и Genre.
+    Гарантирует уникальность пары (book, genre) с помощью unique_together.
+    """
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
@@ -44,6 +60,10 @@ class BookGenre(models.Model):
 
 
 class BookChapter(models.Model):
+    """
+    Модель главы книги, с указанием начального и конечного номера страницы,
+    а также названием главы. Связана с моделью Book.
+    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='chapters')
     start_page_number = models.IntegerField(null=True, blank=True)
@@ -60,6 +80,10 @@ class BookChapter(models.Model):
 
 
 class Page(models.Model):
+    """
+    Модель страницы, содержащая полный текст (content),
+    привязанная к определённой главе (BookChapter).
+    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     chapter = models.ForeignKey(BookChapter, on_delete=models.CASCADE, related_name='pages')
     page_number = models.IntegerField()

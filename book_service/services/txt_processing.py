@@ -3,6 +3,19 @@ from .utils import clean_text, split_text_into_chapters, save_chapter, split_tex
 
 
 def process_txt_file(book, full_original_path):
+    """
+    Обрабатывает загруженный TXT-файл: извлекает текст, очищает его, разбивает на главы и страницы,
+    а затем сохраняет каждую главу в базе данных.
+
+    :param book: Модель Book, к которой будут привязаны новые главы
+    :param full_original_path: Полный путь к загруженному TXT-файлу
+    :return: Словарь с ключами:
+         - 'success': bool, успешность обработки
+         - 'chapter_titles': список названий глав
+         - 'total_chapters': общее количество глав
+         - 'total_pages': общее количество страниц
+         - 'error': текст ошибки (если возникла)
+    """
     try:
         with default_storage.open(full_original_path, 'rb') as f:
             bytes_content = f.read()
