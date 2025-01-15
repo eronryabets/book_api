@@ -84,7 +84,7 @@ def split_text_into_chapters(text):
             # Если уже есть накопленный текст, сохраняем предыдущую главу
             if current_chapter_lines:
                 chapter_text = '\n'.join(current_chapter_lines)
-                chapter_text = clean_text(chapter_text)
+                # chapter_text = clean_text(chapter_text)
                 chapters.append(
                     (current_chapter_title or f"Untitled Chapter {len(chapters) + 1}",
                      chapter_text)
@@ -121,15 +121,18 @@ def split_text_into_pages_by_lines(chapter_text, lines_per_page=20):
     :return: Список страниц, где каждая страница — это строка текста, содержащая 10 строк
     """
     # Сначала чистим от лишних символов
-    cleaned = clean_text(chapter_text)
+    # cleaned = clean_text(chapter_text)    # OLD
     # Разбиваем по переносам строк
-    lines = cleaned.split('\n')
+    # lines = cleaned.split('\n')    # OLD
+
+    # Стало (убрали clean_text):
+    lines = chapter_text.split('\n')    # NEW
     # Убираем возможные пустые хвостовые строки (если нужно)
     # lines = [l for l in lines if l.strip()]
 
     pages = []
     for i in range(0, len(lines), lines_per_page):
-        chunk = lines[i : i + lines_per_page]
+        chunk = lines[i: i + lines_per_page]
         # Склеиваем обратно
         page_content = '\n'.join(chunk)
         pages.append(page_content)
@@ -176,6 +179,42 @@ def save_chapter(book, chapter_title, pages_content, current_page_number):
 
     return end_page_number
 
+
+def add_paragraph_indent(text, indent='    '):
+    """
+    Добавляет отступ (например, 4 пробела) в начало каждого абзаца (строки),
+    кроме, возможно, первого. Под "абзацем" подразумевается текст,
+    который идёт после символа перевода строки.
+
+    Пример:
+        "Первая строка без отступа
+        Вторая строка
+        Третья строка"
+
+    После применения будет:
+            "Первая строка с отступом
+        Вторая строка
+        Третья строка"
+
+    :param text: Исходный текст
+    :param indent: Строка, которая будет добавлена в качестве отступа (по умолчанию 4 пробела)
+    :return: Текст, в котором каждый новый абзац начинается с отступа.
+    """
+    if not text:
+        return ''
+
+    # Регулярное выражение ищет перевод строки,
+    # за которым *не* идёт пробельный символ (\s).
+    # После такого перевода строки мы подставим indent.
+    # Это значит: "\n(?!\s)" -> "найти \n, если дальше НЕ пробел/таб/и т.п."
+    # result = re.sub(r'\n(?!\s)', "\n" + indent, text)
+    # return result
+
+    # Добавляем отступ к самому первому абзацу
+    text = indent + text.lstrip()
+    # Потом уже вставляем отступы перед всеми последующими абзацами
+    result = re.sub(r'\n(?!\s)', "\n" + indent, text)
+    return result
 
 # Пример использования:
 # def process_book_text(book, full_text):

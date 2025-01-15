@@ -2,7 +2,13 @@ import ebooklib
 from django.core.files.storage import default_storage
 from ebooklib import epub
 from bs4 import BeautifulSoup
-from .utils import clean_text, split_text_into_chapters, split_text_into_pages_by_lines, save_chapter
+from .utils import (
+    clean_text,
+    split_text_into_chapters,
+    split_text_into_pages_by_lines,
+    save_chapter,
+    add_paragraph_indent,
+)
 
 
 def process_epub_file(book, full_original_path):
@@ -40,6 +46,9 @@ def process_epub_file(book, full_original_path):
 
         # Очищаем текст от лишних пустых строк
         text_content = clean_text(text_content)
+
+        # Добавляем отступы к абзацам
+        text_content = add_paragraph_indent(text_content, indent='    ')
 
         # Разбиваем текст на главы
         chapters, chapter_titles_detected = split_text_into_chapters(text_content)

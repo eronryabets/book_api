@@ -1,6 +1,11 @@
 from django.core.files.storage import default_storage
 from striprtf.striprtf import rtf_to_text
-from .utils import split_text_into_chapters, save_chapter, split_text_into_pages_by_lines
+from .utils import (
+    split_text_into_chapters,
+    save_chapter,
+    split_text_into_pages_by_lines,
+    add_paragraph_indent,
+)
 
 
 def process_rtf_file(book, full_original_path):
@@ -27,6 +32,9 @@ def process_rtf_file(book, full_original_path):
 
         # Конвертируем RTF в текст
         text_content = rtf_to_text(rtf_content)
+
+        # Добавим отступы к абзацам
+        text_content = add_paragraph_indent(text_content, indent='    ')
 
         # Разбиваем текст на главы
         chapters, chapter_titles_detected = split_text_into_chapters(text_content)
