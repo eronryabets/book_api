@@ -115,7 +115,7 @@ class BookChapterViewSet(viewsets.ModelViewSet):
 
                 # Подготовка данных для bulk_update глав
                 updated_chapters = []
-                current_page_number = 1
+                current_page_number = 1  # Инициализируем для назначения номеров глав
 
                 for chapter in remaining_chapters:
                     chapter.start_page_number = current_page_number
@@ -125,6 +125,9 @@ class BookChapterViewSet(viewsets.ModelViewSet):
 
                 # Массовое обновление глав
                 BookChapter.objects.bulk_update(updated_chapters, ['start_page_number', 'end_page_number'])
+
+                # Сбросим current_page_number для назначения номеров страниц
+                current_page_number = 1
 
                 # Получаем все оставшиеся страницы, упорядоченные по новым номерам глав и старым номерам страниц
                 pages = Page.objects.filter(chapter__book_id=book_id).select_related('chapter').order_by(
