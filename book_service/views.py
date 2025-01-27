@@ -1,4 +1,7 @@
+
+from django.db import transaction
 from django.core.files.storage import default_storage
+from django.db.models import Count
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -45,8 +48,6 @@ class BookViewSet(viewsets.ModelViewSet):
 class BookChapterViewSet(viewsets.ModelViewSet):
     """
     ViewSet для работы с главами книги (BookChapter).
-    - Позволяет просматривать, создавать, редактировать и удалять главы.
-    - Содержит метод «get_chapter_pages» для получения всех страниц главы.
     """
     queryset = BookChapter.objects.all()
     serializer_class = BookChapterSerializer
@@ -67,6 +68,88 @@ class BookChapterViewSet(viewsets.ModelViewSet):
         pages = chapter.pages.all().order_by('page_number')
         serializer = PageSerializer(pages, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], url_path='bulk_delete')
+    def bulk_delete(self, request):
+        """
+        Массовое удаление глав из книги. Удаление глав также удаляет связанные страницы.
+        После удаления необходимо обновить данные книги и глав, а также номера страниц.
+        """
+        chapter_ids = request.data.get('chapter_ids', [])
+
+        # Валидация входных данных
+        if not isinstance(chapter_ids, list) or not all(isinstance(id, str) for id in chapter_ids):
+            return Response({'error': 'chapter_ids должен быть списком строковых идентификаторов.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            with transaction.atomic():
+                # Получаем главы для удаления
+                chapters_to_delete = BookChapter.objects.filter(id__in=chapter_ids)
+                if not chapters_to_delete.exists():
+                    return Response({'error': 'Ни одна из указанных глав не найдена.'},
+                                    status=status.HTTP_404_NOT_FOUND)
+
+                # Проверяем, что все главы принадлежат одной книге
+                book_ids = chapters_to_delete.values_list('book_id', flat=True).distinct()
+                if book_ids.count() > 1:
+                    return Response({'error': 'Все главы должны принадлежать одной книге.'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                book_id = book_ids.first()
+                book = Book.objects.select_for_update().get(id=book_id)
+
+                # Подсчитываем количество страниц, которые будут удалены
+                total_deleted_pages = Page.objects.filter(chapter_id__in=chapter_ids).count()
+
+                # Удаляем главы (и связанные страницы через on_delete=models.CASCADE)
+                chapters_to_delete.delete()
+
+                # Обновляем количество страниц в книге
+                book.total_pages -= total_deleted_pages
+
+                # Получаем оставшиеся главы, аннотированные количеством страниц, упорядоченные по start_page_number
+                remaining_chapters = BookChapter.objects.filter(book_id=book_id).annotate(
+                    page_count=Count('pages')
+                ).order_by('start_page_number')
+
+                # Подготовка данных для bulk_update глав
+                updated_chapters = []
+                current_page_number = 1
+
+                for chapter in remaining_chapters:
+                    chapter.start_page_number = current_page_number
+                    chapter.end_page_number = current_page_number + chapter.page_count - 1
+                    updated_chapters.append(chapter)
+                    current_page_number += chapter.page_count
+
+                # Массовое обновление глав
+                BookChapter.objects.bulk_update(updated_chapters, ['start_page_number', 'end_page_number'])
+
+                # Получаем все оставшиеся страницы, упорядоченные по новым номерам глав и старым номерам страниц
+                pages = Page.objects.filter(chapter__book_id=book_id).select_related('chapter').order_by(
+                    'chapter__start_page_number', 'page_number'
+                )
+
+                # Подготовка данных для bulk_update страниц
+                updated_pages = []
+                for page in pages:
+                    page.page_number = current_page_number
+                    updated_pages.append(page)
+                    current_page_number += 1
+
+                # Массовое обновление страниц
+                Page.objects.bulk_update(updated_pages, ['page_number'])
+
+                # Сохраняем изменения в книге
+                book.save()
+
+                return Response({'status': 'success', 'deleted_pages': total_deleted_pages}, status=status.HTTP_200_OK)
+
+        except Book.DoesNotExist:
+            return Response({'error': 'Книга не найдена.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class PageViewSet(viewsets.ModelViewSet):

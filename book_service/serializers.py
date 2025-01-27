@@ -105,4 +105,4 @@ class PageSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Page
-        fields = ['chapter', 'page_number', 'content']  # id на фронте нам не нужно - уберу
+        fields = ['id', 'chapter', 'page_number', 'content']  # id нужно для bulk действия теперь
