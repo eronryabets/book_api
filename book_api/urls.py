@@ -20,6 +20,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('book_service.urls')),  # for example : text.drunar.space/books/
+    path('', include('book_service.urls')),
     path('silk/', include('silk.urls', namespace='silk')),
 ]
