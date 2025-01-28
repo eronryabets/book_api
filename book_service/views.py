@@ -1,4 +1,3 @@
-
 from django.db import transaction
 from django.core.files.storage import default_storage
 from django.db.models import Count
@@ -10,11 +9,13 @@ from book_service.models import Book, Genre, BookChapter, Page
 from book_service.pagination import BookPagination
 from book_service.serializers import BookSerializer, GenreSerializer, BookChapterSerializer, PageSerializer
 from rest_framework.decorators import action
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from book_service.services.book_processing import process_uploaded_book
 
+from .utils.permissions import IsOwner
 
-# TODO isAuth, isOwner...
+
+# TODO isAuth, isOwner... доделать для остальных действий, изменение, удаление и т.д.
 class BookViewSet(viewsets.ModelViewSet):
     """
     ViewSet для работы с книгами (Book).
@@ -29,6 +30,17 @@ class BookViewSet(viewsets.ModelViewSet):
     serializer_class = BookSerializer
     pagination_class = BookPagination
     filterset_class = BookFilter
+
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
+
+    def get_queryset(self):
+        """
+        Возвращает только те книги, которые принадлежат текущему пользователю.
+        """
+        return Book.objects.filter(user_id=self.request.user.id).order_by('-created_at').prefetch_related(
+            'bookgenre_set__genre',
+            'chapters'
+        )
 
     @action(detail=False, methods=['post'], url_path='upload')
     def upload_book(self, request):
