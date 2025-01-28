@@ -60,9 +60,18 @@ class BookViewSet(viewsets.ModelViewSet):
 class BookChapterViewSet(viewsets.ModelViewSet):
     """
     ViewSet для работы с главами книги (BookChapter).
+    Позволяет просматривать, создавать, редактировать и удалять главы.
+    Пользователь может видеть и управлять только своими главами.
     """
-    queryset = BookChapter.objects.all()
     serializer_class = BookChapterSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
+
+    def get_queryset(self):
+        """
+        Возвращает только те главы, которые принадлежат книгам текущего пользователя.
+        """
+        return BookChapter.objects.filter(book__user_id=self.request.user.id).order_by(
+            'start_page_number').prefetch_related('pages')
 
     @action(detail=False, methods=['get'], url_path='get_chapter_pages')
     def get_chapter_pages(self, request):
@@ -71,7 +80,7 @@ class BookChapterViewSet(viewsets.ModelViewSet):
         if not chapter_id:
             return Response({'error': 'Необходимо указать chapter_id'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            chapter = BookChapter.objects.get(id=chapter_id)
+            chapter = self.get_queryset().get(id=chapter_id)
         except BookChapter.DoesNotExist:
             return Response({'error': 'Глава не найдена'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
@@ -96,10 +105,10 @@ class BookChapterViewSet(viewsets.ModelViewSet):
 
         try:
             with transaction.atomic():
-                # Получаем главы для удаления
-                chapters_to_delete = BookChapter.objects.filter(id__in=chapter_ids)
+                # Получаем главы для удаления, фильтруя по пользователю
+                chapters_to_delete = BookChapter.objects.filter(id__in=chapter_ids, book__user_id=request.user.id)
                 if not chapters_to_delete.exists():
-                    return Response({'error': 'Ни одна из указанных глав не найдена.'},
+                    return Response({'error': 'Ни одна из указанных глав не найдена или у вас нет к ним доступа.'},
                                     status=status.HTTP_404_NOT_FOUND)
 
                 # Проверяем, что все главы принадлежат одной книге
@@ -109,7 +118,7 @@ class BookChapterViewSet(viewsets.ModelViewSet):
                                     status=status.HTTP_400_BAD_REQUEST)
 
                 book_id = book_ids.first()
-                book = Book.objects.select_for_update().get(id=book_id)
+                book = Book.objects.select_for_update().get(id=book_id, user_id=request.user.id)
 
                 # Подсчитываем количество страниц, которые будут удалены
                 total_deleted_pages = Page.objects.filter(chapter_id__in=chapter_ids).count()
@@ -162,7 +171,8 @@ class BookChapterViewSet(viewsets.ModelViewSet):
                 return Response({'status': 'success', 'deleted_pages': total_deleted_pages}, status=status.HTTP_200_OK)
 
         except Book.DoesNotExist:
-            return Response({'error': 'Книга не найдена.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Книга не найдена или у вас нет к ней доступа.'},
+                            status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
