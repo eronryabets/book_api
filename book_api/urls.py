@@ -21,5 +21,6 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('book_service.urls')),
+    path('', include('note_service.urls')),
     path('silk/', include('silk.urls', namespace='silk')),
 ]

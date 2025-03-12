@@ -61,7 +61,8 @@ INSTALLED_APPS = [
     'django_filters',
     'silk',
 
-    'book_service'
+    'book_service',
+    'note_service',
 
 ]
 
@@ -241,40 +242,45 @@ CSRF_TRUSTED_ORIGINS = [
 
 ]
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{asctime} [{levelname}] {name}: {message}',
-            'style': '{',
-            'datefmt': '%Y-%m-%d %H:%M:%S',  # Формат времени
-        },
-        'simple': {
-            'format': '{levelname}: {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',  # Используем форматтер с временной меткой
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',  # Установите уровень логирования на DEBUG для вывода всех сообщений
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'DEBUG',  # Уровень логирования для Django
-            'propagate': False,
-        },
-        'book_api': {  # имя приложения
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'formatters': {
+#         'verbose': {
+#             'format': '{asctime} [{levelname}] {name}: {message}',
+#             'style': '{',
+#             'datefmt': '%Y-%m-%d %H:%M:%S',  # Формат времени
+#         },
+#         'simple': {
+#             'format': '{levelname}: {message}',
+#             'style': '{',
+#         },
+#     },
+#     'handlers': {
+#         'console': {
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'verbose',  # Используем форматтер с временной меткой
+#         },
+#     },
+#     'root': {
+#         'handlers': ['console'],
+#         'level': 'DEBUG',  # Установите уровень логирования на DEBUG для вывода всех сообщений
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console'],
+#             'level': 'DEBUG',  # Уровень логирования для Django
+#             'propagate': False,
+#         },
+#         'book_api': {  # имя приложения
+#             'handlers': ['console'],
+#             'level': 'DEBUG',
+#             'propagate': False,
+#         },
+#         'silk': {
+#             'handlers': ['console'],
+#             'level': 'WARNING',  # или 'ERROR'
+#             'propagate': False,
+#         },
+#     },
+# }
