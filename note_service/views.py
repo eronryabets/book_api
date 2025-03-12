@@ -1,8 +1,8 @@
 from rest_framework import viewsets, permissions
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
-from .models import Note
-from .serializers import NoteSerializer
+from .models import Note, Tag
+from .serializers import NoteSerializer, TagSerializer
 from .pagination import NotePagination
 from .filters import NoteFilter
 from note_service.utils.permissions import IsOwner
@@ -10,12 +10,10 @@ from note_service.utils.permissions import IsOwner
 
 class NoteViewSet(viewsets.ModelViewSet):
     """
-    ViewSet для заметок.
-    - Позволяет просматривать, создавать, редактировать и удалять заметки.
-    - Применяет пагинацию, фильтрацию (по языку, дате создания и обновления)
-      и поиск по заголовку (title).
-    - Доступ предоставляется только аутентифицированным пользователям,
-      причём только владельцу заметки.
+    ViewSet для работы с заметками.
+    Позволяет просматривать, создавать, редактировать и удалять заметки.
+    Применяет пагинацию, фильтрацию (по language, датам, тегам) и поиск по title.
+    Доступ разрешён только аутентифицированным пользователям, и только владельцу заметки.
     """
     serializer_class = NoteSerializer
     pagination_class = NotePagination
@@ -25,13 +23,18 @@ class NoteViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get_queryset(self):
-        """
-        Возвращает заметки, принадлежащие текущему пользователю.
-        """
         return Note.objects.filter(user_id=self.request.user.id).order_by('-created_at')
 
     def perform_create(self, serializer):
-        """
-        При создании заметки устанавливает user_id на основе аутентифицированного пользователя.
-        """
         serializer.save(user_id=self.request.user.id)
+
+
+class TagViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для работы с тегами.
+    Позволяет просматривать, создавать, редактировать и удалять теги.
+    Сортирует теги по алфавиту.
+    """
+    serializer_class = TagSerializer
+    queryset = Tag.objects.all().order_by('name')
+    permission_classes = [permissions.IsAuthenticated]
