@@ -5,7 +5,7 @@ from .models import Note
 from .serializers import NoteSerializer
 from .pagination import NotePagination
 from .filters import NoteFilter
-from .permissions import IsOwner
+from note_service.utils.permissions import IsOwner
 
 
 class NoteViewSet(viewsets.ModelViewSet):
