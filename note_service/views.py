@@ -20,7 +20,7 @@ class NoteViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = NoteFilter
     search_fields = ['title']
-    ordering_fields = ['created_at', 'updated_at']  # Разрешённые поля для сортировки
+    ordering_fields = ['created_at', 'updated_at', 'title']  # Разрешённые поля для сортировки
     ordering = ['-created_at']  # Сортировка по умолчанию
     permission_classes = [permissions.IsAuthenticated, IsOwner]
 
