@@ -1,6 +1,6 @@
 from rest_framework import viewsets, permissions
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter
+from rest_framework.filters import SearchFilter, OrderingFilter
 from .models import Note, Tag
 from .serializers import NoteSerializer, TagSerializer
 from .pagination import NotePagination
@@ -17,17 +17,18 @@ class NoteViewSet(viewsets.ModelViewSet):
     """
     serializer_class = NoteSerializer
     pagination_class = NotePagination
-    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = NoteFilter
     search_fields = ['title']
+    ordering_fields = ['created_at', 'updated_at']  # Разрешённые поля для сортировки
+    ordering = ['-created_at']  # Сортировка по умолчанию
     permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get_queryset(self):
-        return Note.objects.filter(user_id=self.request.user.id).order_by('-created_at')
+        return Note.objects.filter(user_id=self.request.user.id)
 
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user.id)
-
 
 class TagViewSet(viewsets.ModelViewSet):
     """
