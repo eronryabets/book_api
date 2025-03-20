@@ -1,20 +1,47 @@
 from django_filters import rest_framework as filters
-from .models import Note, Tag
+from .models import Note
+
+
+class PartialTagFilter(filters.Filter):
+    """
+    Фильтр для частичного поиска по тегам.
+
+    Этот фильтр извлекает все значения параметра 'tags' из данных запроса и применяет фильтрацию к QuerySet.
+    Он проверяет наличие непустых значений в параметрах, а затем для каждого тега выполняет фильтрацию по подстроке
+    (case-insensitive) в поле tags__name.
+
+    Как работает:
+    1. Извлекается список значений параметра 'tags' с помощью self.parent.data.getlist('tags').
+    2. Если список пуст или все значения состоят только из пробелов, фильтрация не применяется и возвращается
+    исходный QuerySet.
+    3. Для каждого переданного тега:
+       - Значение очищается от лишних пробелов.
+       - QuerySet фильтруется с использованием метода filter(tags__name__icontains=tag),
+         что позволяет найти объекты, у которых имя тега содержит данное значение (без учёта регистра).
+    4. Итоговый отфильтрованный QuerySet возвращается.
+
+    Пример использования:
+      Если в URL присутствует параметр tags, например:
+        ?tags=python,redux
+      Фильтр выполнит последовательное применение:
+        qs = qs.filter(tags__name__icontains='python').filter(tags__name__icontains='redux')
+    """
+    def filter(self, qs, value):
+        # Получаем список всех значений параметра 'tags' из запроса
+        raw_tags = self.parent.data.getlist('tags')
+        # Если параметр отсутствует или состоит только из пустых значений – фильтр не применяется
+        if not raw_tags or all(not t.strip() for t in raw_tags):
+            return qs
+        # Для каждого переданного значения применяем фильтрацию по подстроке
+        for tag in raw_tags:
+            tag = tag.strip()
+            qs = qs.filter(tags__name__icontains=tag)
+        return qs
 
 
 class NoteFilter(filters.FilterSet):
-    """
-    Фильтр для модели Note.
-    Позволяет фильтровать заметки по тегам, языку, дате создания и дате обновления.
-    """
-    # Фильтр по названиям тегов
-    tags = filters.ModelMultipleChoiceFilter(
-        field_name='tags__name',  # поле для фильтрации (название тега)
-        to_field_name='name',  # фильтруем по полю name модели Tag
-        queryset=Tag.objects.all(),  # набор тегов для фильтрации
-        conjoined=True,  # заметка должна содержать ВСЕ указанные теги
-        label='Tags'
-    )
+    # Используем наш кастомный фильтр для тегов
+    tags = PartialTagFilter()
 
     created_at_after = filters.DateTimeFilter(
         field_name='created_at',
