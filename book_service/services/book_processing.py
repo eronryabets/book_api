@@ -24,7 +24,7 @@ def process_uploaded_book(request):
     :return: Response объект со статусом выполнения и результатом обработки (имена глав, статус, ошибки)
     """
     with transaction.atomic():
-        user_id = request.data.get('user_id')
+        user_id = request.user.id  # берем user_id НЕ из request.data, а используем request.user.id.
         description = request.data.get('description')
         title = request.data.get('title')
         language = request.data.get('language')

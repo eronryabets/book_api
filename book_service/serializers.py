@@ -11,6 +11,7 @@ class GenreSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Genre. Возвращает идентификатор и название жанра.
     """
+
     class Meta:
         model = Genre
         fields = ['id', 'name']
@@ -21,6 +22,7 @@ class BookChapterSerializer(serializers.ModelSerializer):
     Сериализатор для модели BookChapter. Включает ключевые поля,
     связанные с главой (id, книга, начальный и конечный номера страниц, заголовок).
     """
+
     class Meta:
         model = BookChapter
         fields = ['id', 'book', 'start_page_number', 'end_page_number', 'chapter_title']
@@ -28,10 +30,11 @@ class BookChapterSerializer(serializers.ModelSerializer):
 
 class BookSerializer(serializers.ModelSerializer):
     """
-    Сериализатор для модели Book. Помимо основных полей книги,
-    поддерживает работу со связанными жанрами и главами.
-    Позволяет создавать и обновлять книгу вместе с указанием жанров и обложки.
+        Сериализатор для модели Book. Помимо основных полей книги,
+        поддерживает работу со связанными жанрами и главами.
+        Позволяет создавать и обновлять книгу вместе с указанием жанров и обложки.
     """
+    user_id = serializers.UUIDField(read_only=True)  # Теперь поле только для чтения
     genres = serializers.PrimaryKeyRelatedField(
         queryset=Genre.objects.all(),
         many=True
@@ -56,6 +59,7 @@ class BookSerializer(serializers.ModelSerializer):
             'genre_details',
             'chapters'
         ]
+        read_only_fields = ['id', 'user_id', 'created_at', 'updated_at']
 
     def get_genre_details(self, obj):
         genres = obj.bookgenre_set.all().select_related('genre')
@@ -103,6 +107,7 @@ class PageSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Page, включающий информацию о главе, номере и тексте страницы.
     """
+
     class Meta:
         model = Page
         fields = ['id', 'chapter', 'page_number', 'content']  # id нужно для bulk действия теперь

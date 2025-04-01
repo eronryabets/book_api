@@ -30,7 +30,6 @@ class BookViewSet(viewsets.ModelViewSet):
     serializer_class = BookSerializer
     pagination_class = BookPagination
     filterset_class = BookFilter
-
     permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get_queryset(self):
@@ -41,6 +40,13 @@ class BookViewSet(viewsets.ModelViewSet):
             'bookgenre_set__genre',
             'chapters'
         )
+
+    """
+    Больше не получаем user_id из request.data, а берем ид юзера из самого токена.
+    """
+    def perform_create(self, serializer):
+        # Здесь user_id устанавливается из токена, и клиент не должен его передавать
+        serializer.save(user_id=self.request.user.id)
 
     @action(detail=False, methods=['post'], url_path='upload')
     def upload_book(self, request):
@@ -53,7 +59,6 @@ class BookViewSet(viewsets.ModelViewSet):
                 default_storage.delete(instance.cover_image.path)
             except Exception as e:
                 print(f"Ошибка при удалении обложки книги: {e}")
-
         super().perform_destroy(instance)
 
 
